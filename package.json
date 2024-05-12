@@ -1,0 +1,25 @@
+{
+	"name": "type-validator",
+	"version": "1.0.0",
+	"description": "Validates data type and shape",
+	"files": [
+		"dist"
+	],
+	"main": "./dist/typeValidator.umd.js",
+	"module": "./dist/typeValidator.es.js",
+	"exports": {
+		".": {
+			"import": "./dist/typeValidator.es.js",
+			"require": "./dist/typeValidator.umd.js"
+		}
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "craftbox",
+	"license": "ISC",
+	"devDependencies": {
+		"typescript": "^5.4.5",
+		"vite": "^5.2.11"
+	}
+}
