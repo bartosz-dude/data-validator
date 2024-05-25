@@ -11,7 +11,8 @@ describe("required", () => {
 					type: "object",
 					required: false,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -23,7 +24,8 @@ describe("required", () => {
 					type: "object",
 					required: true,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -36,18 +38,20 @@ describe("type", () => {
 				{
 					type: "object",
 				},
-				{}
+				{},
+				new Map()
 			)
 		).toBe(true)
 	})
 
 	test("not object is not accepted", () => {
-		expect(
+		expect(() =>
 			objectValidator(
 				{
 					type: "object",
 				},
-				"a"
+				"a",
+				new Map()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -74,7 +78,8 @@ describe("matchProperties", () => {
 				{
 					test: "test",
 					abc: "test",
-				}
+				},
+				new Map()
 			)
 		).toBe(true)
 
@@ -92,7 +97,8 @@ describe("matchProperties", () => {
 				},
 				{
 					test2: "test2",
-				}
+				},
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})

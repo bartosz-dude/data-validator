@@ -6,6 +6,7 @@ import {
 } from "../Errors"
 import { ObjectSchema, TypeSchema } from "../types/schemaTypes"
 import validateType from "../validateType"
+import { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -14,6 +15,7 @@ interface Options {
 export default function objectValidator(
 	schema: ObjectSchema,
 	target: any,
+	schemaVariables: SchemaVariables,
 	options: Options = {}
 ) {
 	options.targetName ??= JSON.stringify(target)
@@ -62,7 +64,7 @@ export default function objectValidator(
 		for (const elem of requiredPropsNames) {
 			if (!targetProps.includes(elem)) {
 				throw new RequiredError(
-					`${options.targetName} needs to contain ${elem} property`
+					`${options.targetName} needs to contain '${elem}' property`
 				)
 			}
 		}
@@ -75,7 +77,7 @@ export default function objectValidator(
 				let invalidCount = 0
 				for (let i = 0; i < propSchema.length; i++) {
 					try {
-						validateType(propSchema[i], prop, {
+						validateType(propSchema[i], prop, schemaVariables, {
 							targetName: options.targetName,
 						})
 					} catch (error) {
@@ -92,7 +94,7 @@ export default function objectValidator(
 					)
 				}
 			} else {
-				validateType(propSchema, prop, {
+				validateType(propSchema, prop, schemaVariables, {
 					targetName: elem,
 				})
 			}

@@ -16,7 +16,8 @@ describe("required", () => {
 					type: "array",
 					required: false,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -28,7 +29,8 @@ describe("required", () => {
 					type: "array",
 					required: true,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -41,7 +43,8 @@ describe("type", () => {
 				{
 					type: "array",
 				},
-				[]
+				[],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -52,7 +55,8 @@ describe("type", () => {
 				{
 					type: "array",
 				},
-				0
+				0,
+				new Map()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -66,7 +70,8 @@ describe("length", () => {
 					type: "array",
 					length: 4,
 				},
-				[1, 2, 3, 4]
+				[1, 2, 3, 4],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -78,7 +83,8 @@ describe("length", () => {
 					type: "array",
 					length: 4,
 				},
-				[1, 2, 3, 4, 5]
+				[1, 2, 3, 4, 5],
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -92,7 +98,8 @@ describe("length", () => {
 						min: 4,
 					},
 				},
-				[1, 2, 3, 4, 5]
+				[1, 2, 3, 4, 5],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -106,7 +113,8 @@ describe("length", () => {
 						max: 4,
 					},
 				},
-				[1, 2, 3]
+				[1, 2, 3],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -121,7 +129,8 @@ describe("length", () => {
 						min: 2,
 					},
 				},
-				[1, 2, 3]
+				[1, 2, 3],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -135,7 +144,8 @@ describe("length", () => {
 						max: 4,
 					},
 				},
-				[1, 2, 3, 4, 5]
+				[1, 2, 3, 4, 5],
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -149,7 +159,8 @@ describe("length", () => {
 						min: 4,
 					},
 				},
-				[1, 2, 3]
+				[1, 2, 3],
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -164,7 +175,8 @@ describe("length", () => {
 						min: 2,
 					},
 				},
-				[1, 2, 3, 4, 5]
+				[1, 2, 3, 4, 5],
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -185,7 +197,8 @@ describe("match", () => {
 						},
 					],
 				},
-				["a", 1]
+				["a", 1],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -206,7 +219,8 @@ describe("match", () => {
 						},
 					],
 				},
-				["a"]
+				["a"],
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -232,7 +246,8 @@ describe("match", () => {
 						},
 					],
 				},
-				["a", 1]
+				["a", 1],
+				new Map()
 			)
 		).toBe(true)
 
@@ -256,7 +271,8 @@ describe("match", () => {
 						},
 					],
 				},
-				["b", 1]
+				["b", 1],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -275,7 +291,8 @@ describe("contains", () => {
 						},
 					],
 				},
-				["a"]
+				["a"],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -292,7 +309,8 @@ describe("contains", () => {
 						},
 					],
 				},
-				["a"]
+				["a"],
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -311,7 +329,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a"]
+					["a", "a"],
+					new Map()
 				)
 			).toBe(true)
 		})
@@ -329,7 +348,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a"]
+					["a"],
+					new Map()
 				)
 			).toThrowError(AmountError)
 		})
@@ -349,7 +369,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a", "a"]
+					["a", "a", "a"],
+					new Map()
 				)
 			).toBe(true)
 		})
@@ -369,7 +390,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a"]
+					["a", "a"],
+					new Map()
 				)
 			).toBe(true)
 		})
@@ -390,7 +412,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a"]
+					["a", "a"],
+					new Map()
 				)
 			).toBe(true)
 		})
@@ -410,7 +433,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a"]
+					["a"],
+					new Map()
 				)
 			).toThrowError(AmountError)
 		})
@@ -430,7 +454,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a", "a", "a"]
+					["a", "a", "a", "a"],
+					new Map()
 				)
 			).toThrowError(AmountError)
 		})
@@ -451,7 +476,8 @@ describe("contains", () => {
 							},
 						],
 					},
-					["a", "a", "a", "a"]
+					["a", "a", "a", "a"],
+					new Map()
 				)
 			).toThrowError(AmountError)
 		})
@@ -483,7 +509,8 @@ describe("match with contains", () => {
 						},
 					],
 				},
-				[1, "abc", 2]
+				[1, "abc", 2],
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -512,7 +539,8 @@ describe("match with contains", () => {
 						},
 					],
 				},
-				[3, "abc", 2]
+				[3, "abc", 2],
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})

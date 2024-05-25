@@ -4,7 +4,9 @@ import {
 	TypeValidationError,
 	ValueError,
 } from "../Errors"
+import useVariable from "../schemaVariables/useVariable"
 import { StringSchema } from "../types/schemaTypes"
+import { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -13,12 +15,22 @@ interface Options {
 export default function stringValidator(
 	schema: StringSchema,
 	target: any,
+	schemaVariables: SchemaVariables,
 	options: Options = {}
 ) {
 	options.targetName ??= target
 
 	if (typeof target === "undefined") {
-		if (schema.required) {
+		if (
+			useVariable(
+				schema.required,
+				schemaVariables,
+				{
+					type: "boolean",
+				},
+				schema.use$
+			)
+		) {
 			throw new RequiredError(`${options.targetName} is required`)
 		}
 		return true
@@ -28,8 +40,21 @@ export default function stringValidator(
 		throw new TypeValidationError(`${options.targetName} is not a string`)
 	}
 
-	if (typeof schema.length === "number") {
-		if (target.length !== schema.length) {
+	if (
+		typeof schema.length === "number" ||
+		typeof schema.length === "string"
+	) {
+		if (
+			target.length !==
+			useVariable(
+				schema.length,
+				schemaVariables,
+				{
+					type: "number",
+				},
+				schema.use$
+			)
+		) {
 			throw new LengthError(
 				`${options.targetName} must have length ${schema.length}`
 			)
@@ -37,12 +62,34 @@ export default function stringValidator(
 	}
 
 	if (typeof schema.length == "object") {
-		if (schema.length.min && target.length < schema.length.min) {
+		if (
+			schema.length.min &&
+			target.length <
+				useVariable(
+					schema.length.min,
+					schemaVariables,
+					{
+						type: "number",
+					},
+					schema.use$
+				)
+		) {
 			throw new LengthError(
 				`${options.targetName} length must be at least ${schema.length.min}`
 			)
 		}
-		if (schema.length.max && target.length > schema.length.max) {
+		if (
+			schema.length.max &&
+			target.length >
+				useVariable(
+					schema.length.max,
+					schemaVariables,
+					{
+						type: "number",
+					},
+					schema.use$
+				)
+		) {
 			throw new LengthError(
 				`${options.targetName} length must not exceed ${schema.length.max}`
 			)
@@ -60,7 +107,17 @@ export default function stringValidator(
 	}
 
 	if (typeof schema.match === "string") {
-		if (target !== schema.match) {
+		if (
+			target !==
+			useVariable(
+				schema.match,
+				schemaVariables,
+				{
+					type: "string",
+				},
+				schema.use$
+			)
+		) {
 			throw new ValueError(
 				`${options.targetName} is not "${schema.match}"`
 			)

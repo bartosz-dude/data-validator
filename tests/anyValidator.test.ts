@@ -9,7 +9,8 @@ describe("required", () => {
 					type: "any",
 					required: false,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -22,7 +23,8 @@ describe("type", () => {
 				{
 					type: "any",
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -33,7 +35,8 @@ describe("type", () => {
 				{
 					type: "any",
 				},
-				""
+				"",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -44,7 +47,8 @@ describe("type", () => {
 				{
 					type: "any",
 				},
-				1
+				1,
+				new Map()
 			)
 		).toBe(true)
 	})

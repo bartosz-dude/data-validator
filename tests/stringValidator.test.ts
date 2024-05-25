@@ -15,7 +15,8 @@ describe("required", () => {
 					type: "string",
 					required: false,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -27,7 +28,8 @@ describe("required", () => {
 					type: "string",
 					required: true,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -40,7 +42,8 @@ describe("type", () => {
 				{
 					type: "string",
 				},
-				0
+				0,
+				new Map()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -51,7 +54,8 @@ describe("type", () => {
 				{
 					type: "string",
 				},
-				""
+				"",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -65,7 +69,8 @@ describe("length", () => {
 					type: "string",
 					length: 4,
 				},
-				"abcd"
+				"abcd",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -77,7 +82,8 @@ describe("length", () => {
 					type: "string",
 					length: 4,
 				},
-				"abcde"
+				"abcde",
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -91,7 +97,8 @@ describe("length", () => {
 						min: 4,
 					},
 				},
-				"abcde"
+				"abcde",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -105,7 +112,8 @@ describe("length", () => {
 						max: 4,
 					},
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -120,7 +128,8 @@ describe("length", () => {
 						min: 2,
 					},
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -134,7 +143,8 @@ describe("length", () => {
 						max: 4,
 					},
 				},
-				"abcde"
+				"abcde",
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -148,7 +158,8 @@ describe("length", () => {
 						min: 4,
 					},
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -163,7 +174,8 @@ describe("length", () => {
 						min: 2,
 					},
 				},
-				"abcde"
+				"abcde",
+				new Map()
 			)
 		).toThrowError(LengthError)
 	})
@@ -177,7 +189,8 @@ describe("match", () => {
 					type: "string",
 					match: "abc",
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -189,7 +202,8 @@ describe("match", () => {
 					type: "string",
 					match: "abc",
 				},
-				"abcd"
+				"abcd",
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})
@@ -201,7 +215,8 @@ describe("match", () => {
 					type: "string",
 					match: ["abc", "abcd", "123"],
 				},
-				"abcd"
+				"abcd",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -213,7 +228,8 @@ describe("match", () => {
 					type: "string",
 					match: ["abc", "abcd", "123"],
 				},
-				"a2"
+				"a2",
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})
@@ -225,7 +241,8 @@ describe("match", () => {
 					type: "string",
 					match: /ab./,
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -237,7 +254,8 @@ describe("match", () => {
 					type: "string",
 					match: /ad./,
 				},
-				"abc"
+				"abc",
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})

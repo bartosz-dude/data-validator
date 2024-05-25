@@ -14,59 +14,115 @@ type ValueType =
 	| "float" // ✔️
 	| "any" // ✔️
 
-interface GenericSchema {
-	required?: boolean
+type GenericSchema = {
 	type: ValueType
-}
+} & (
+	| {
+			required?: boolean
+			use$?: false
+	  }
+	| {
+			required?: boolean | SchemaVariable
+			use$: true
+	  }
+)
 
-export interface StringSchema extends GenericSchema {
-	type: "string"
-	match?: RegExp | string | string[]
-	length?:
-		| number
-		| {
-				min?: number
-				max?: number
-		  }
-}
+export type SchemaVariable = `$${string}`
 
-export interface NumberSchema extends GenericSchema {
-	type: "number"
-	match?:
-		| number
-		| {
-				min?: number
-				max?: number
-		  }
-}
+export type StringSchema =
+	| GenericSchema & {
+			type: "string"
+			$?: string
+	  } & (
+				| {
+						match?: RegExp | string | string[]
+						length?:
+							| number
+							| {
+									min?: number
+									max?: number
+							  }
+						use$?: false
+				  }
+				| {
+						match?: RegExp | string | string[] | SchemaVariable
+						length?:
+							| number
+							| SchemaVariable
+							| {
+									min?: number | SchemaVariable
+									max?: number | SchemaVariable
+							  }
 
-export interface BooleanSchema extends GenericSchema {
-	type: "boolean"
-	match?: boolean
-}
+						use$: true
+				  }
+			)
 
-export interface NullSchema extends GenericSchema {
+export type NumberSchema =
+	| GenericSchema & {
+			type: "number"
+			$?: string
+	  } & (
+				| {
+						match?:
+							| number
+							| {
+									min?: number
+									max?: number
+							  }
+						use$?: false
+				  }
+				| {
+						match?:
+							| number
+							| SchemaVariable
+							| {
+									min?: number | SchemaVariable
+									max?: number | SchemaVariable
+							  }
+
+						use$: true
+				  }
+			)
+
+export type BooleanSchema =
+	| GenericSchema & {
+			type: "boolean"
+			$?: string
+	  } & (
+				| {
+						match?: boolean
+
+						use$?: false
+				  }
+				| {
+						match?: boolean | SchemaVariable
+						use$: true
+				  }
+			)
+
+export type NullSchema = GenericSchema & {
 	type: "null"
 }
 
-export interface UndefinedSchema extends GenericSchema {
+export type UndefinedSchema = GenericSchema & {
 	type: "undefined"
 }
 
-export interface SymbolSchema extends GenericSchema {
+export type SymbolSchema = GenericSchema & {
 	type: "symbol"
 }
 
-export interface AnySchema extends GenericSchema {
+export type AnySchema = GenericSchema & {
 	type: "any"
 }
 
-export interface InstanceSchema extends GenericSchema {
+export type InstanceSchema = GenericSchema & {
 	type: "instance"
 	instanceOf: any
 }
 
-export interface ArraySchema extends GenericSchema {
+export type ArraySchema = GenericSchema & {
 	type: "array"
 	/**
 	 * Matches elements at exact indexes
@@ -76,67 +132,146 @@ export interface ArraySchema extends GenericSchema {
 	 * Matches one of arrays with elements at an exact indexes
 	 */
 	matchOneOf?: (TypeSchema | TypeSchema[])[][]
-	/**
-	 * Determines if all of these are contained in the array
-	 */
-	contains?: (TypeSchema & {
-		required: true
-		amount?:
-			| number
-			| {
-					min?: number
-					max?: number
-			  }
-	})[]
-	length?:
-		| number
-		| {
-				min?: number
-				max?: number
-		  }
-}
 
-export interface ObjectSchema extends GenericSchema {
+	$?: string
+} & (
+		| {
+				/**
+				 * Determines if all of these are contained in the array
+				 */
+				contains?: (TypeSchema & {
+					required: true
+					amount?:
+						| number
+						| {
+								min?: number
+								max?: number
+						  }
+				})[]
+				length?:
+					| number
+					| {
+							min?: number
+							max?: number
+					  }
+				use$?: false
+		  }
+		| {
+				/**
+				 * Determines if all of these are contained in the array
+				 */
+				contains?: (TypeSchema & {
+					required: true
+					amount?:
+						| number
+						| SchemaVariable
+						| {
+								min?: number | SchemaVariable
+								max?: number | SchemaVariable
+						  }
+				})[]
+				length?:
+					| number
+					| SchemaVariable
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }
+				use$: true
+		  }
+	)
+
+export type ObjectSchema = GenericSchema & {
 	type: "object"
 	matchProperties?: {
 		[key: string]: TypeSchema | TypeSchema[]
 	}
 }
 
-export interface BigintSchema extends GenericSchema {
+export type BigintSchema = GenericSchema & {
 	type: "bigint"
-	match?:
-		| bigint
+	$?: string
+	use$?: boolean
+} & (
 		| {
-				min?: bigint
-				max?: bigint
+				match?:
+					| bigint
+					| {
+							min?: bigint
+							max?: bigint
+					  }
+				use$?: false
 		  }
-}
+		| {
+				match?:
+					| bigint
+					| SchemaVariable
+					| {
+							min?: bigint | SchemaVariable
+							max?: bigint | SchemaVariable
+					  }
+				use$: true
+		  }
+	)
 
-export interface FunctionSchema extends GenericSchema {
+export type FunctionSchema = GenericSchema & {
 	type: "function"
 }
 
-export interface IntegerSchema extends GenericSchema {
+export type IntegerSchema = GenericSchema & {
 	type: "integer"
-	match?:
-		| number
+	$?: string
+	use$?: boolean
+} & (
 		| {
-				min?: number
-				max?: number
+				match?:
+					| number
+					| {
+							min?: number
+							max?: number
+					  }
+				use$?: false
 		  }
-}
+		| {
+				match?:
+					| number
+					| SchemaVariable
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }
 
-export interface FloatSchema extends GenericSchema {
+				use$: true
+		  }
+	)
+
+export type FloatSchema = GenericSchema & {
 	type: "float"
 	fractionRequired?: boolean
-	match?:
-		| number
+	$?: string
+	use$?: boolean
+} & (
 		| {
-				min?: number
-				max?: number
+				match?:
+					| number
+					| {
+							min?: number
+							max?: number
+					  }
+				use$?: false
 		  }
-}
+		| {
+				match?:
+					| number
+					| SchemaVariable
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }
+
+				use$: true
+		  }
+	)
 
 export type TypeSchema =
 	| StringSchema

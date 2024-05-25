@@ -11,7 +11,8 @@ describe("required", () => {
 					type: "number",
 					required: false,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -23,7 +24,8 @@ describe("required", () => {
 					type: "number",
 					required: true,
 				},
-				undefined
+				undefined,
+				new Map()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -36,7 +38,8 @@ describe("type", () => {
 				{
 					type: "number",
 				},
-				1
+				1,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -47,7 +50,8 @@ describe("type", () => {
 				{
 					type: "number",
 				},
-				""
+				"",
+				new Map()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -61,7 +65,8 @@ describe("match", () => {
 					type: "number",
 					match: 1,
 				},
-				1
+				1,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -73,7 +78,8 @@ describe("match", () => {
 					type: "number",
 					match: 1,
 				},
-				2
+				2,
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})
@@ -87,7 +93,8 @@ describe("match", () => {
 						min: 1,
 					},
 				},
-				2
+				2,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -101,7 +108,8 @@ describe("match", () => {
 						max: 2,
 					},
 				},
-				1
+				1,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -116,7 +124,8 @@ describe("match", () => {
 						max: 3,
 					},
 				},
-				2
+				2,
+				new Map()
 			)
 		).toBe(true)
 	})
@@ -130,7 +139,8 @@ describe("match", () => {
 						max: 1,
 					},
 				},
-				2
+				2,
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})
@@ -144,7 +154,8 @@ describe("match", () => {
 						min: 2,
 					},
 				},
-				1
+				1,
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})
@@ -159,7 +170,8 @@ describe("match", () => {
 						max: 3,
 					},
 				},
-				4
+				4,
+				new Map()
 			)
 		).toThrowError(ValueError)
 	})

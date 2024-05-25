@@ -12,12 +12,12 @@ export default function undefinedValidator(
 ) {
 	options.targetName ??= target
 
-	if (typeof target === "undefined") {
-		if (schema.required) {
-			throw new RequiredError(`${options.targetName} is required`)
-		}
-		return true
-	}
+	// if (typeof target === "undefined") {
+	// 	if (schema.required) {
+	// 		throw new RequiredError(`${options.targetName} is required`)
+	// 	}
+	// 	return true
+	// }
 
 	if (target !== undefined) {
 		throw new TypeValidationError(`${options.targetName} is not undefined`)
