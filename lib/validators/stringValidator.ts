@@ -3,6 +3,7 @@ import {
 	RequiredError,
 	TypeValidationError,
 	ValueError,
+	VariableValueError,
 } from "../Errors"
 import useVariable from "../schemaVariables/useVariable"
 import { StringSchema } from "../types/schemaTypes"
@@ -59,6 +60,8 @@ export default function stringValidator(
 			if (error instanceof ValueError) {
 				throw new LengthError(error.message)
 			}
+
+			throw error
 		}
 	}
 
@@ -141,17 +144,30 @@ export default function stringValidator(
 	}
 
 	if (typeof schema.match === "string") {
-		if (
-			target !==
-			useVariable(
-				schema.match,
-				schemaVariables,
-				{
-					type: "string",
-				},
-				schema.use$
-			)
-		) {
+		const matchVal = useVariable(
+			schema.match,
+			schemaVariables,
+			undefined,
+			schema.use$
+		) as string | string[]
+
+		if (schema.use$ && target.match(/\$.*/) && Array.isArray(matchVal)) {
+			if (!matchVal.every((v) => typeof v === "string")) {
+				throw new VariableValueError(
+					`'${schema.match}' must contain only strings`
+				)
+			}
+
+			if (!matchVal.some((v) => v === target)) {
+				throw new ValueError(
+					`${options.targetName} is not contained in ${JSON.stringify(
+						schema.match
+					)}`
+				)
+			}
+		}
+
+		if (!Array.isArray(matchVal) && target !== matchVal) {
 			throw new ValueError(
 				`${options.targetName} is not "${schema.match}"`
 			)
