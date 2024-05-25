@@ -3,8 +3,9 @@ import {
 	LengthError,
 	RequiredError,
 	TypeValidationError,
+	ValueError,
 } from "../Errors"
-import { ArraySchema, TypeSchema } from "../types/schemaTypes"
+import { ArraySchema, SchemaVariable, TypeSchema } from "../types/schemaTypes"
 import validateType from "../validateType"
 import { SchemaVariables } from "../validate"
 import useVariable from "../schemaVariables/useVariable"
@@ -41,61 +42,82 @@ export default function arrayValidator(
 		throw new TypeValidationError(`${options.targetName} is not an array`)
 	}
 
-	if (
-		typeof schema.length === "number" ||
-		typeof schema.length === "string"
-	) {
-		if (
-			target.length !==
-			useVariable(
-				schema.length,
-				schemaVariables,
+	if (typeof schema.length !== "undefined") {
+		try {
+			validateType(
 				{
 					type: "number",
+					match: schema.length,
+					use$: true,
 				},
-				schema.use$
+				target.length,
+				schemaVariables,
+				{
+					targetName: `${options.targetName} length`,
+				}
 			)
-		) {
-			throw new LengthError(
-				`${options.targetName} array must have length ${schema.length}`
-			)
+		} catch (error) {
+			if (error instanceof ValueError) {
+				throw new LengthError(error.message)
+			}
 		}
 	}
 
-	if (typeof schema.length == "object") {
-		if (
-			schema.length.min &&
-			target.length <
-				useVariable(
-					schema.length.min,
-					schemaVariables,
-					{
-						type: "number",
-					},
-					schema.use$
-				)
-		) {
-			throw new LengthError(
-				`${options.targetName} array length must be at least ${schema.length.min}`
-			)
-		}
-		if (
-			schema.length.max &&
-			target.length >
-				useVariable(
-					schema.length.max,
-					schemaVariables,
-					{
-						type: "number",
-					},
-					schema.use$
-				)
-		) {
-			throw new LengthError(
-				`${options.targetName} array length must not exceed ${schema.length.max}`
-			)
-		}
-	}
+	// if (
+	// 	typeof schema.length === "number" ||
+	// 	typeof schema.length === "string"
+	// ) {
+	// 	if (
+	// 		target.length !==
+	// 		useVariable(
+	// 			schema.length,
+	// 			schemaVariables,
+	// 			{
+	// 				type: "number",
+	// 			},
+	// 			schema.use$
+	// 		)
+	// 	) {
+	// 		throw new LengthError(
+	// 			`${options.targetName} array must have length ${schema.length}`
+	// 		)
+	// 	}
+	// }
+
+	// if (typeof schema.length == "object") {
+	// 	if (
+	// 		schema.length.min &&
+	// 		target.length <
+	// 			useVariable(
+	// 				schema.length.min,
+	// 				schemaVariables,
+	// 				{
+	// 					type: "number",
+	// 				},
+	// 				schema.use$
+	// 			)
+	// 	) {
+	// 		throw new LengthError(
+	// 			`${options.targetName} array length must be at least ${schema.length.min}`
+	// 		)
+	// 	}
+	// 	if (
+	// 		schema.length.max &&
+	// 		target.length >
+	// 			useVariable(
+	// 				schema.length.max,
+	// 				schemaVariables,
+	// 				{
+	// 					type: "number",
+	// 				},
+	// 				schema.use$
+	// 			)
+	// 	) {
+	// 		throw new LengthError(
+	// 			`${options.targetName} array length must not exceed ${schema.length.max}`
+	// 		)
+	// 	}
+	// }
 
 	function match(schemaMatch: (TypeSchema | TypeSchema[])[]) {
 		for (let i = 0; i < schemaMatch.length; i++) {
@@ -196,69 +218,96 @@ export default function arrayValidator(
 				)
 			}
 
-			if (
-				typeof schema.contains[i].amount === "number" ||
-				typeof schema.contains[i].amount === "string"
-			) {
-				if (
-					found.length !==
-					useVariable(
-						schema.contains[i].amount,
-						schemaVariables,
+			if (typeof schema.contains[i].amount !== "undefined") {
+				try {
+					validateType(
 						{
 							type: "number",
+							match: schema.contains[i].amount,
+							use$: true,
 						},
-						schema.use$
+						found.length,
+						schemaVariables,
+						{
+							targetName: `${JSON.stringify(
+								schema.contains[i]
+							)} amount`,
+						}
 					)
-				) {
-					throw new AmountError(
-						`${JSON.stringify(
-							schema.contains[i]
-						)} must be included ${schema.contains[i].amount} times`
-					)
+				} catch (error) {
+					if (error instanceof ValueError) {
+						throw new AmountError(error.message)
+					}
 				}
 			}
 
-			const amount = schema.contains[i].amount
-			if (typeof amount === "object") {
-				if (
-					amount.min &&
-					found.length <
-						useVariable(
-							amount.min,
-							schemaVariables,
-							{
-								type: "number",
-							},
-							schema.use$
-						)
-				) {
-					throw new AmountError(
-						`${JSON.stringify(
-							schema.contains[i]
-						)} must be included at least ${amount.min} times`
-					)
-				}
-				if (
-					amount.max &&
-					found.length >
-						useVariable(
-							amount.max,
-							schemaVariables,
-							{
-								type: "number",
-							},
-							schema.use$
-						)
-				) {
-					throw new AmountError(
-						`${JSON.stringify(
-							schema.contains[i]
-						)} must be included not more than ${amount.max} times`
-					)
-				}
-			}
+			// if (
+			// 	typeof schema.contains[i].amount === "number" ||
+			// 	typeof schema.contains[i].amount === "string"
+			// ) {
+			// 	if (
+			// 		found.length !==
+			// 		useVariable(
+			// 			schema.contains[i].amount,
+			// 			schemaVariables,
+			// 			{
+			// 				type: "number",
+			// 			},
+			// 			schema.use$
+			// 		)
+			// 	) {
+			// 		throw new AmountError(
+			// 			`${JSON.stringify(
+			// 				schema.contains[i]
+			// 			)} must be included ${schema.contains[i].amount} times`
+			// 		)
+			// 	}
+			// }
+
+			// const amount = schema.contains[i].amount
+			// if (typeof amount === "object") {
+			// 	if (
+			// 		amount.min &&
+			// 		found.length <
+			// 			useVariable(
+			// 				amount.min,
+			// 				schemaVariables,
+			// 				{
+			// 					type: "number",
+			// 				},
+			// 				schema.use$
+			// 			)
+			// 	) {
+			// 		throw new AmountError(
+			// 			`${JSON.stringify(
+			// 				schema.contains[i]
+			// 			)} must be included at least ${amount.min} times`
+			// 		)
+			// 	}
+			// 	if (
+			// 		amount.max &&
+			// 		found.length >
+			// 			useVariable(
+			// 				amount.max,
+			// 				schemaVariables,
+			// 				{
+			// 					type: "number",
+			// 				},
+			// 				schema.use$
+			// 			)
+			// 	) {
+			// 		throw new AmountError(
+			// 			`${JSON.stringify(
+			// 				schema.contains[i]
+			// 			)} must be included not more than ${amount.max} times`
+			// 		)
+			// 	}
+			// }
 		}
+	}
+
+	if (typeof schema.$ === "string") {
+		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

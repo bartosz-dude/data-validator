@@ -38,22 +38,31 @@ export type StringSchema =
 						match?: RegExp | string | string[]
 						length?:
 							| number
+							| number[]
 							| {
 									min?: number
 									max?: number
 							  }
+							| {
+									min?: number
+									max?: number
+							  }[]
 						use$?: false
 				  }
 				| {
 						match?: RegExp | string | string[] | SchemaVariable
 						length?:
 							| number
+							| (number | SchemaVariable)[]
 							| SchemaVariable
 							| {
 									min?: number | SchemaVariable
 									max?: number | SchemaVariable
 							  }
-
+							| {
+									min?: number | SchemaVariable
+									max?: number | SchemaVariable
+							  }[]
 						use$: true
 				  }
 			)
@@ -66,21 +75,30 @@ export type NumberSchema =
 				| {
 						match?:
 							| number
+							| number[]
 							| {
 									min?: number
 									max?: number
 							  }
+							| {
+									min?: number
+									max?: number
+							  }[]
 						use$?: false
 				  }
 				| {
 						match?:
 							| number
+							| (number | SchemaVariable)[]
 							| SchemaVariable
 							| {
 									min?: number | SchemaVariable
 									max?: number | SchemaVariable
 							  }
-
+							| {
+									min?: number | SchemaVariable
+									max?: number | SchemaVariable
+							  }[]
 						use$: true
 				  }
 			)
@@ -143,17 +161,27 @@ export type ArraySchema = GenericSchema & {
 					required: true
 					amount?:
 						| number
+						| number[]
 						| {
 								min?: number
 								max?: number
 						  }
+						| {
+								min?: number
+								max?: number
+						  }[]
 				})[]
 				length?:
 					| number
+					| number[]
 					| {
 							min?: number
 							max?: number
 					  }
+					| {
+							min?: number
+							max?: number
+					  }[]
 				use$?: false
 		  }
 		| {
@@ -164,19 +192,29 @@ export type ArraySchema = GenericSchema & {
 					required: true
 					amount?:
 						| number
+						| (number | SchemaVariable)[]
 						| SchemaVariable
 						| {
 								min?: number | SchemaVariable
 								max?: number | SchemaVariable
 						  }
+						| {
+								min?: number | SchemaVariable
+								max?: number | SchemaVariable
+						  }[]
 				})[]
 				length?:
 					| number
+					| (number | SchemaVariable)[]
 					| SchemaVariable
 					| {
 							min?: number | SchemaVariable
 							max?: number | SchemaVariable
 					  }
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }[]
 				use$: true
 		  }
 	)
@@ -196,20 +234,30 @@ export type BigintSchema = GenericSchema & {
 		| {
 				match?:
 					| bigint
+					| bigint[]
 					| {
 							min?: bigint
 							max?: bigint
 					  }
+					| {
+							min?: bigint
+							max?: bigint
+					  }[]
 				use$?: false
 		  }
 		| {
 				match?:
 					| bigint
+					| (bigint | SchemaVariable)[]
 					| SchemaVariable
 					| {
 							min?: bigint | SchemaVariable
 							max?: bigint | SchemaVariable
 					  }
+					| {
+							min?: bigint | SchemaVariable
+							max?: bigint | SchemaVariable
+					  }[]
 				use$: true
 		  }
 	)
@@ -226,21 +274,30 @@ export type IntegerSchema = GenericSchema & {
 		| {
 				match?:
 					| number
+					| number[]
 					| {
 							min?: number
 							max?: number
 					  }
+					| {
+							min?: number
+							max?: number
+					  }[]
 				use$?: false
 		  }
 		| {
 				match?:
 					| number
+					| (number | SchemaVariable)[]
 					| SchemaVariable
 					| {
 							min?: number | SchemaVariable
 							max?: number | SchemaVariable
 					  }
-
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }[]
 				use$: true
 		  }
 	)
@@ -254,21 +311,30 @@ export type FloatSchema = GenericSchema & {
 		| {
 				match?:
 					| number
+					| number[]
 					| {
 							min?: number
 							max?: number
 					  }
+					| {
+							min?: number
+							max?: number
+					  }[]
 				use$?: false
 		  }
 		| {
 				match?:
 					| number
+					| (number | SchemaVariable)[]
 					| SchemaVariable
 					| {
 							min?: number | SchemaVariable
 							max?: number | SchemaVariable
 					  }
-
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }[]
 				use$: true
 		  }
 	)

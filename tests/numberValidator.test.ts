@@ -175,4 +175,48 @@ describe("match", () => {
 			)
 		).toThrowError(ValueError)
 	})
+
+	test("number in one of the ranges is accepted", () => {
+		expect(
+			numberValidator(
+				{
+					type: "number",
+					match: [
+						{
+							min: 1,
+							max: 3,
+						},
+						{
+							min: 5,
+							max: 8,
+						},
+					],
+				},
+				6,
+				new Map()
+			)
+		).toBe(true)
+	})
+
+	test("number outside of the ranges is not accepted", () => {
+		expect(() =>
+			numberValidator(
+				{
+					type: "number",
+					match: [
+						{
+							min: 1,
+							max: 3,
+						},
+						{
+							min: 5,
+							max: 8,
+						},
+					],
+				},
+				4,
+				new Map()
+			)
+		).toThrowError(ValueError)
+	})
 })
