@@ -46,3 +46,15 @@ export class AmountError extends TypeValidationError {
 		super(message)
 	}
 }
+
+export class SchemaError extends TypeValidationError {
+	constructor(message: string) {
+		super(message)
+	}
+}
+
+export class VariableValueError extends TypeValidationError {
+	constructor(message: string) {
+		super(message)
+	}
+}

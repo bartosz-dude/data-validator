@@ -1,4 +1,9 @@
-import { RequiredError, TypeValidationError, ValueError } from "../Errors"
+import {
+	RequiredError,
+	SchemaError,
+	TypeValidationError,
+	ValueError,
+} from "../Errors"
 import { IntegerSchema, SchemaVariable } from "../types/schemaTypes"
 import { SchemaVariables } from "../validate"
 import useVariable from "../schemaVariables/useVariable"
@@ -75,6 +80,15 @@ export default function integerValidator(
 
 			return v
 		})
+
+		if (
+			match.some((v) => typeof v === "number") &&
+			match.some((v) => typeof v === "object")
+		) {
+			throw new SchemaError(
+				`You cannot mix numbers and ranges in single integer match declaration`
+			)
+		}
 
 		if (
 			match.every((v) => typeof v === "number") &&

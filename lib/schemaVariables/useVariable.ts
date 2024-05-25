@@ -1,11 +1,11 @@
-import { TypeValidationError } from "../Errors"
+import { SchemaError, TypeValidationError } from "../Errors"
 import { SchemaVariable, TypeSchema } from "../types/schemaTypes"
 import validate, { SchemaVariables } from "../validate"
 
 export default function useVariable<T extends unknown>(
 	target: T | SchemaVariable,
 	schemaVariables: SchemaVariables,
-	schema: TypeSchema,
+	schema?: TypeSchema,
 	useVariable = false
 ): Exclude<T, SchemaVariable> {
 	if (useVariable && typeof target === "string" && target.match(/\$.*/)) {
@@ -16,7 +16,7 @@ export default function useVariable<T extends unknown>(
 				`Cannot use '${target}' before assignment in schema`
 			)
 		}
-		validate(variable, schema)
+		if (schema) validate(variable, schema)
 
 		return variable
 	}
@@ -24,9 +24,9 @@ export default function useVariable<T extends unknown>(
 	if (
 		!useVariable &&
 		typeof target === "string" &&
-		schema.type !== "string"
+		(schema?.type ?? "") !== "string"
 	) {
-		throw new TypeValidationError(
+		throw new SchemaError(
 			`'${target}' variable cannot be used without 'use$' being true`
 		)
 	}

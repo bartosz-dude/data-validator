@@ -160,6 +160,7 @@ export type ArraySchema = GenericSchema & {
 				contains?: (TypeSchema & {
 					required: true
 					amount?:
+						| "all"
 						| number
 						| number[]
 						| {
@@ -191,6 +192,7 @@ export type ArraySchema = GenericSchema & {
 				contains?: (TypeSchema & {
 					required: true
 					amount?:
+						| "all"
 						| number
 						| (number | SchemaVariable)[]
 						| SchemaVariable

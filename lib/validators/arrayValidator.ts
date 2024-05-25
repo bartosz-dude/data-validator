@@ -218,12 +218,22 @@ export default function arrayValidator(
 				)
 			}
 
-			if (typeof schema.contains[i].amount !== "undefined") {
+			if (
+				schema.contains[i].amount === "all" &&
+				found.length !== target.length
+			) {
+				throw new AmountError(
+					`${options.targetName} all elements must be ${schema.contains[i]}`
+				)
+			}
+
+			const amount = schema.contains[i].amount
+			if (typeof amount !== "undefined" && amount !== "all") {
 				try {
 					validateType(
 						{
 							type: "number",
-							match: schema.contains[i].amount,
+							match: amount,
 							use$: true,
 						},
 						found.length,
@@ -238,6 +248,8 @@ export default function arrayValidator(
 					if (error instanceof ValueError) {
 						throw new AmountError(error.message)
 					}
+
+					throw error
 				}
 			}
 
