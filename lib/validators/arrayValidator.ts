@@ -50,22 +50,65 @@ export default function arrayValidator(
 		}
 	}
 
-	if (schema.match) {
-		for (let i = 0; i < schema.match.length; i++) {
-			// try {
-			validateType(schema.match[i], target[i], {
+	function match(schemaMatch: (TypeSchema | TypeSchema[])[]) {
+		for (let i = 0; i < schemaMatch.length; i++) {
+			const topMatch = schemaMatch[i]
+
+			if (Array.isArray(topMatch)) {
+				let invalidCount = 0
+				for (let j = 0; j < topMatch.length; j++) {
+					const midMatch = topMatch[j]
+
+					try {
+						validateType(midMatch, target[i], {
+							targetName: `${options.targetName}[${i}]`,
+						})
+					} catch (error) {
+						invalidCount++
+						continue
+					}
+				}
+
+				if (invalidCount >= topMatch.length) {
+					throw new RequiredError(
+						`${
+							options.targetName
+						} needs to contain one of ${JSON.stringify(
+							schemaMatch[i]
+						)}`
+					)
+				}
+
+				continue
+			}
+
+			validateType(topMatch, target[i], {
 				targetName: `${options.targetName}[${i}]`,
 			})
-			// } catch (error) {
-			// 	if (
-			// 		schema.match[i].required &&
-			// 		error instanceof TypeValidationError
-			// 	) {
-			// 		throw error
-			// 	}
+		}
+	}
 
-			// 	continue
-			// }
+	if (schema.match) {
+		match(schema.match)
+	}
+
+	if (schema.matchOneOf) {
+		let invalidCount = 0
+		for (let i = 0; i < schema.matchOneOf.length; i++) {
+			try {
+				match(schema.matchOneOf[i])
+			} catch (error) {
+				invalidCount++
+				continue
+			}
+		}
+
+		if (invalidCount >= schema.matchOneOf.length) {
+			throw new RequiredError(
+				`${options.targetName} needs to contain one of ${JSON.stringify(
+					schema.matchOneOf
+				)}`
+			)
 		}
 	}
 

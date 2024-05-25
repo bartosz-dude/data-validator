@@ -210,6 +210,56 @@ describe("match", () => {
 			)
 		).toThrowError(RequiredError)
 	})
+
+	test("exact items match with one of item", () => {
+		expect(
+			arrayValidator(
+				{
+					type: "array",
+					match: [
+						[
+							{
+								match: "a",
+								type: "string",
+							},
+							{
+								match: "b",
+								type: "string",
+							},
+						],
+						{
+							type: "number",
+						},
+					],
+				},
+				["a", 1]
+			)
+		).toBe(true)
+
+		expect(
+			arrayValidator(
+				{
+					type: "array",
+					match: [
+						[
+							{
+								match: "a",
+								type: "string",
+							},
+							{
+								match: "b",
+								type: "string",
+							},
+						],
+						{
+							type: "number",
+						},
+					],
+				},
+				["b", 1]
+			)
+		).toBe(true)
+	})
 })
 
 describe("contains", () => {

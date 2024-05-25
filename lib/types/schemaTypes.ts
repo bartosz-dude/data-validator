@@ -2,16 +2,16 @@ type ValueType =
 	| "string" // ✔️
 	| "number" // ✔️
 	| "boolean" // ✔️
-	| "object"
+	| "object" // ✔️
 	| "array" // ✔️
 	| "symbol" // ✔️
-	| "bigint"
-	| "function"
+	| "bigint" // ✔️
+	| "function" // ✔️
 	| "null" // ✔️
 	| "undefined" // ✔️
 	| "instance" // ✔️
-	| "integer"
-	| "float"
+	| "integer" // ✔️
+	| "float" // ✔️
 	| "any" // ✔️
 
 interface GenericSchema {
@@ -69,9 +69,13 @@ export interface InstanceSchema extends GenericSchema {
 export interface ArraySchema extends GenericSchema {
 	type: "array"
 	/**
-	 * Matches each element at exact index
+	 * Matches elements at exact indexes
 	 */
-	match?: TypeSchema[]
+	match?: (TypeSchema | TypeSchema[])[]
+	/**
+	 * Matches one of arrays with elements at an exact indexes
+	 */
+	matchOneOf?: (TypeSchema | TypeSchema[])[][]
 	/**
 	 * Determines if all of these are contained in the array
 	 */
@@ -94,9 +98,44 @@ export interface ArraySchema extends GenericSchema {
 
 export interface ObjectSchema extends GenericSchema {
 	type: "object"
-	properties?: {
+	matchProperties?: {
 		[key: string]: TypeSchema | TypeSchema[]
 	}
+}
+
+export interface BigintSchema extends GenericSchema {
+	type: "bigint"
+	match?:
+		| bigint
+		| {
+				min?: bigint
+				max?: bigint
+		  }
+}
+
+export interface FunctionSchema extends GenericSchema {
+	type: "function"
+}
+
+export interface IntegerSchema extends GenericSchema {
+	type: "integer"
+	match?:
+		| number
+		| {
+				min?: number
+				max?: number
+		  }
+}
+
+export interface FloatSchema extends GenericSchema {
+	type: "float"
+	fractionRequired?: boolean
+	match?:
+		| number
+		| {
+				min?: number
+				max?: number
+		  }
 }
 
 export type TypeSchema =
@@ -110,3 +149,7 @@ export type TypeSchema =
 	| SymbolSchema
 	| AnySchema
 	| ObjectSchema
+	| BigintSchema
+	| FunctionSchema
+	| IntegerSchema
+	| FloatSchema

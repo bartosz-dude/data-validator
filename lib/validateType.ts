@@ -1,8 +1,12 @@
 import { TypeSchema } from "./types/schemaTypes"
 import anyValidator from "./validators/anyValidator"
 import arrayValidator from "./validators/arrayValidator"
+import bigintValidator from "./validators/bigintValidator"
 import booleanValidator from "./validators/booleanValidator"
+import floatValidator from "./validators/floatValidator"
+import functionValidator from "./validators/functionValidator"
 import instanceValidator from "./validators/instanceValidator"
+import integerValidator from "./validators/integerValidator"
 import nullValidator from "./validators/nullValidator"
 import numberValidator from "./validators/numberValidator"
 import objectValidator from "./validators/objectValidator"
@@ -40,5 +44,13 @@ export default function validateType(
 			return anyValidator(schema, target, options)
 		case "object":
 			return objectValidator(schema, target, options)
+		case "integer":
+			return integerValidator(schema, target, options)
+		case "bigint":
+			return bigintValidator(schema, target, options)
+		case "function":
+			return functionValidator(schema, target, options)
+		case "float":
+			return floatValidator(schema, target, options)
 	}
 }
