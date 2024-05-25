@@ -10,8 +10,6 @@ export default function validate(
 ): boolean {
 	const schemaVariables = new Map<SchemaVariable, any>()
 
-	console.log(schemaVariables)
-
 	if (options.throwErrors) {
 		return validateType(schema, target, schemaVariables)
 	}

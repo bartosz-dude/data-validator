@@ -1,12 +1,13 @@
 {
 	"name": "type-validator",
 	"version": "1.0.0",
-	"description": "Validates data type and shape",
+	"description": "validate any js data type",
 	"files": [
 		"dist"
 	],
 	"main": "./dist/typeValidator.umd.js",
 	"module": "./dist/typeValidator.es.js",
+	"types": "./dist/typeValidator.es.d.ts",
 	"exports": {
 		".": {
 			"import": "./dist/typeValidator.es.js",
@@ -18,11 +19,12 @@
 		"dev": "vite",
 		"test": "vitest"
 	},
-	"author": "craftbox",
+	"author": "bartosz-dude",
 	"license": "ISC",
 	"devDependencies": {
 		"typescript": "^5.4.5",
 		"vite": "^5.2.11",
+		"vite-plugin-dts": "^3.9.1",
 		"vitest": "^1.6.0"
 	}
 }
