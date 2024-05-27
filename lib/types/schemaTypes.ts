@@ -152,26 +152,45 @@ export type ArraySchema = GenericSchema & {
 	matchOneOf?: (TypeSchema | TypeSchema[])[][]
 
 	$?: string
+	/**
+	 * Determines if all of these are contained in the array
+	 */
+	contains?:
+		| (TypeSchema & {
+				required: true
+				amount?:
+					| "all"
+					| number
+					| number[]
+					| {
+							min?: number
+							max?: number
+					  }
+					| {
+							min?: number
+							max?: number
+					  }[]
+				use$?: false
+		  })[]
+		| (TypeSchema & {
+				required: true
+				amount?:
+					| "all"
+					| number
+					| (number | SchemaVariable)[]
+					| SchemaVariable
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }[]
+				use$: true
+		  })[]
 } & (
 		| {
-				/**
-				 * Determines if all of these are contained in the array
-				 */
-				contains?: (TypeSchema & {
-					required: true
-					amount?:
-						| "all"
-						| number
-						| number[]
-						| {
-								min?: number
-								max?: number
-						  }
-						| {
-								min?: number
-								max?: number
-						  }[]
-				})[]
 				length?:
 					| number
 					| number[]
@@ -186,25 +205,6 @@ export type ArraySchema = GenericSchema & {
 				use$?: false
 		  }
 		| {
-				/**
-				 * Determines if all of these are contained in the array
-				 */
-				contains?: (TypeSchema & {
-					required: true
-					amount?:
-						| "all"
-						| number
-						| (number | SchemaVariable)[]
-						| SchemaVariable
-						| {
-								min?: number | SchemaVariable
-								max?: number | SchemaVariable
-						  }
-						| {
-								min?: number | SchemaVariable
-								max?: number | SchemaVariable
-						  }[]
-				})[]
 				length?:
 					| number
 					| (number | SchemaVariable)[]
