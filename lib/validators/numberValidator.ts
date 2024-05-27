@@ -118,12 +118,18 @@ export default function numberValidator(
 		let failedMatches = 0
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
-				if (matchEntry.min && target < matchEntry.min) {
+				if (
+					typeof matchEntry.min !== "undefined" &&
+					target < matchEntry.min
+				) {
 					failedMatches++
 					continue
 				}
 
-				if (matchEntry.max && target > matchEntry.max) {
+				if (
+					typeof matchEntry.max !== "undefined" &&
+					target > matchEntry.max
+				) {
 					failedMatches++
 					continue
 				}
@@ -139,7 +145,7 @@ export default function numberValidator(
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
 		if (
-			schema.match.min &&
+			typeof schema.match.min !== "undefined" &&
 			target <
 				useVariable(
 					schema.match.min,
@@ -151,12 +157,12 @@ export default function numberValidator(
 				)
 		) {
 			throw new ValueError(
-				`${options.targetName} must be higher than ${schema.match.min}`
+				`${options.targetName} must be higher or equal ${schema.match.min}`
 			)
 		}
 
 		if (
-			schema.match.max &&
+			typeof schema.match.max !== "undefined" &&
 			target >
 				useVariable(
 					schema.match.max,
@@ -168,7 +174,7 @@ export default function numberValidator(
 				)
 		) {
 			throw new ValueError(
-				`${options.targetName} must be lower than ${schema.match.max}`
+				`${options.targetName} must be lower or equal ${schema.match.max}`
 			)
 		}
 	}

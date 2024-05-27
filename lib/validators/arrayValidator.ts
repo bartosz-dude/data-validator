@@ -210,20 +210,16 @@ export default function arrayValidator(
 				}
 			})
 
-			if (found.length == 0) {
-				throw new RequiredError(
-					`${options.targetName} needs to contain ${JSON.stringify(
-						schema.contains[i]
-					)}`
-				)
-			}
-
 			if (
 				schema.contains[i].amount === "all" &&
 				found.length !== target.length
 			) {
 				throw new AmountError(
-					`${options.targetName} all elements must be ${schema.contains[i]}`
+					`${
+						options.targetName
+					} all elements must be ${JSON.stringify(
+						schema.contains[i]
+					)}`
 				)
 			}
 
