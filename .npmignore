@@ -1,0 +1,5 @@
+lib/
+tests/
+tsconfig.json
+vite.config.json
+node_modules

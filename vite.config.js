@@ -10,7 +10,8 @@ module.exports = defineConfig( {
 			fileName: ( format ) => `typeValidator.${format}.js`,
 			formats: [ "es", "umd" ]
 		},
-		// minify: "esbuild"
+		// sourcemap: true
+		minify: false
 	},
 	plugins: [ dtsPlugin( {
 		rollupTypes: true,

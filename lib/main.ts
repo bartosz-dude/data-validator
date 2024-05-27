@@ -11,7 +11,7 @@ import {
 } from "./Errors"
 import validate from "./validate"
 
-export default {
+export {
 	validate,
 	TypeValidationError,
 	LengthError,
