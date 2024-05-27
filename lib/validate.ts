@@ -14,5 +14,9 @@ export default function validate(
 		return validateType(schema, target, schemaVariables)
 	}
 
-	return false
+	try {
+		return validateType(schema, target, schemaVariables)
+	} catch (error) {
+		return false
+	}
 }
