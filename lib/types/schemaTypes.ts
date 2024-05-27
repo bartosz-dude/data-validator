@@ -155,11 +155,42 @@ export type ArraySchema = GenericSchema & {
 	/**
 	 * Determines if all of these are contained in the array
 	 */
+
 	contains?:
 		| (TypeSchema & {
 				required: true
 				amount?:
-					| "all"
+					| number
+					| number[]
+					| {
+							min?: number
+							max?: number
+					  }
+					| {
+							min?: number
+							max?: number
+					  }[]
+				use$?: false
+		  })
+		| (TypeSchema & {
+				required: true
+				amount?:
+					| number
+					| (number | SchemaVariable)[]
+					| SchemaVariable
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }
+					| {
+							min?: number | SchemaVariable
+							max?: number | SchemaVariable
+					  }[]
+				use$: true
+		  })
+		| (TypeSchema & {
+				required: true
+				amount?:
 					| number
 					| number[]
 					| {
@@ -175,7 +206,6 @@ export type ArraySchema = GenericSchema & {
 		| (TypeSchema & {
 				required: true
 				amount?:
-					| "all"
 					| number
 					| (number | SchemaVariable)[]
 					| SchemaVariable
@@ -191,6 +221,7 @@ export type ArraySchema = GenericSchema & {
 		  })[]
 } & (
 		| {
+				strict?: boolean
 				length?:
 					| number
 					| number[]
@@ -205,6 +236,7 @@ export type ArraySchema = GenericSchema & {
 				use$?: false
 		  }
 		| {
+				strict?: boolean | SchemaVariable
 				length?:
 					| number
 					| (number | SchemaVariable)[]

@@ -1,6 +1,8 @@
 import {
+	MatchError,
 	RequiredError,
 	SchemaError,
+	TypeError,
 	TypeValidationError,
 	ValueError,
 } from "../Errors"
@@ -19,6 +21,7 @@ export default function numberValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
 	if (typeof target === "undefined") {
 		if (
@@ -26,35 +29,61 @@ export default function numberValidator(
 				schema.required,
 				schemaVariables,
 				{
+					schemaProperty: "required",
+					schema: JSON.stringify(schema),
+					type: "number",
+				},
+				{
 					type: "boolean",
 				},
 				schema.use$
 			)
 		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			throw new RequiredError({
+				schema: JSON.stringify(schema),
+				targetName: targetName,
+				targetValue: target,
+				type: "number",
+			})
 		}
 		return true
 	}
 
 	if (typeof target !== "number") {
-		throw new TypeValidationError(`${options.targetName} is not a number`)
+		throw new TypeError({
+			schema: JSON.stringify(schema),
+			targetName: targetName,
+			targetValue: target,
+			type: "number",
+		})
 	}
 
 	if (typeof schema.match === "number" || typeof schema.match === "string") {
-		if (
-			target !==
-			useVariable(
-				schema.match,
-				schemaVariables,
-				{
+		const matchValue = useVariable(
+			schema.match,
+			schemaVariables,
+			{
+				schemaProperty: "match",
+				schema: JSON.stringify(schema),
+				type: "number",
+			},
+			{
+				type: "number",
+			},
+			schema.use$
+		)
+		if (target !== matchValue) {
+			throw new MatchError({
+				schema: JSON.stringify(schema),
+				targetName: targetName,
+				targetValue: target,
+				type: "number",
+				details: {
 					type: "number",
+					value: target,
+					valueSchema: schema.match,
 				},
-				schema.use$
-			)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be ${schema.match}`
-			)
+			})
 		}
 	}
 
@@ -64,6 +93,11 @@ export default function numberValidator(
 				return useVariable(
 					v,
 					schemaVariables,
+					{
+						schemaProperty: "match[]",
+						schema: JSON.stringify(schema),
+						type: "number",
+					},
 					{
 						type: "number",
 					},
@@ -77,6 +111,11 @@ export default function numberValidator(
 						v.min,
 						schemaVariables,
 						{
+							schemaProperty: "match[].min",
+							schema: JSON.stringify(schema),
+							type: "number",
+						},
+						{
 							type: "number",
 						},
 						schema.use$
@@ -84,6 +123,11 @@ export default function numberValidator(
 					max: useVariable(
 						v.max,
 						schemaVariables,
+						{
+							schemaProperty: "match[].max",
+							schema: JSON.stringify(schema),
+							type: "number",
+						},
 						{
 							type: "number",
 						},
@@ -151,6 +195,11 @@ export default function numberValidator(
 					schema.match.min,
 					schemaVariables,
 					{
+						schemaProperty: "match.min",
+						schema: JSON.stringify(schema),
+						type: "number",
+					},
+					{
 						type: "number",
 					},
 					schema.use$
@@ -167,6 +216,11 @@ export default function numberValidator(
 				useVariable(
 					schema.match.max,
 					schemaVariables,
+					{
+						schemaProperty: "match.max",
+						schema: JSON.stringify(schema),
+						type: "number",
+					},
 					{
 						type: "number",
 					},

@@ -14,6 +14,7 @@ export default function anyValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
 	if (typeof target === "undefined") {
 		if (
@@ -21,12 +22,22 @@ export default function anyValidator(
 				schema.required,
 				schemaVariables,
 				{
+					schemaProperty: "required",
+					schema: JSON.stringify(schema),
+					type: "any",
+				},
+				{
 					type: "boolean",
 				},
 				schema.use$
 			)
 		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			throw new RequiredError({
+				type: "any",
+				schema: JSON.stringify(schema),
+				targetName: targetName,
+				targetValue: target,
+			})
 		}
 		return true
 	}

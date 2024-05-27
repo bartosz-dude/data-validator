@@ -1,10 +1,15 @@
-import { SchemaError, TypeValidationError } from "../Errors"
+import { SchemaError, SchemaTypes, TypeValidationError } from "../Errors"
 import { SchemaVariable, TypeSchema } from "../types/schemaTypes"
 import validate, { SchemaVariables } from "../validate"
 
 export default function useVariable<T extends unknown>(
 	target: T | SchemaVariable,
 	schemaVariables: SchemaVariables,
+	errorStuff: {
+		type: SchemaTypes
+		schemaProperty: string
+		schema: string
+	},
 	schema?: TypeSchema,
 	useVariable = false
 ): Exclude<T, SchemaVariable> {
@@ -27,7 +32,18 @@ export default function useVariable<T extends unknown>(
 		(schema?.type ?? "") !== "string"
 	) {
 		throw new SchemaError(
-			`'${target}' variable cannot be used without 'use$' being true`
+			`'${target}' variable cannot be used without 'use$' being true`,
+			{
+				errorType: "use$EnabledRequiredToUseDynamicSchema",
+				originType: errorStuff.type,
+				schemaProperty: errorStuff.schemaProperty,
+				schema: errorStuff.schema,
+				type: "schema",
+				details: {
+					expected: `use$ set to true`,
+					got: `use$ unset or set to false`,
+				},
+			}
 		)
 	}
 

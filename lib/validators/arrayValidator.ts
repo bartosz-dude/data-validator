@@ -2,6 +2,7 @@ import {
 	AmountError,
 	LengthError,
 	RequiredError,
+	TypeError,
 	TypeValidationError,
 	ValueError,
 } from "../Errors"
@@ -33,13 +34,21 @@ export default function arrayValidator(
 				schema.use$
 			)
 		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			throw new RequiredError({
+				property: options.targetName,
+				schema: JSON.stringify(schema),
+				type: "array",
+			})
 		}
 		return true
 	}
 
 	if (!Array.isArray(target)) {
-		throw new TypeValidationError(`${options.targetName} is not an array`)
+		throw new TypeError({
+			property: options.targetName,
+			schema: JSON.stringify(schema),
+			type: "array",
+		})
 	}
 
 	if (typeof schema.length !== "undefined") {
@@ -58,7 +67,12 @@ export default function arrayValidator(
 			)
 		} catch (error) {
 			if (error instanceof ValueError) {
-				throw new LengthError(error.message)
+				throw new LengthError({
+					schema: JSON.stringify(schema),
+					type: "array",
+					value: target.length,
+					valueSchema: 
+				})
 			}
 		}
 	}
@@ -181,136 +195,87 @@ export default function arrayValidator(
 		}
 	}
 
-	if (schema.contains) {
-		for (let i = 0; i < schema.contains.length; i++) {
-			if (!schema.contains[i].required) {
-				continue
-			}
+	function matchContain(contain: Exclude<typeof schema.contains, undefined>) {
+		if (Array.isArray(contain)) {
+			return 0
+		}
 
-			const found = (target as any[]).filter((v, vI) => {
-				try {
-					if (!schema.contains) {
-						return false
-					}
+		// if (!contain.required) {
+		// 	return 0
+		// }
 
-					return validateType(
-						schema.contains[i],
-						v,
-						schemaVariables,
-						{
-							targetName: `${options.targetName}[${vI}]`,
-						}
-					)
-				} catch (error) {
-					if (!schema.contains) {
-						return false
-					}
-
+		const found = (target as any[]).filter((v, vI) => {
+			try {
+				if (!contain) {
 					return false
 				}
-			})
 
-			if (
-				schema.contains[i].amount === "all" &&
-				found.length !== target.length
-			) {
-				throw new AmountError(
-					`${
-						options.targetName
-					} all elements must be ${JSON.stringify(
-						schema.contains[i]
-					)}`
-				)
-			}
-
-			const amount = schema.contains[i].amount
-			if (typeof amount !== "undefined" && amount !== "all") {
-				try {
-					validateType(
-						{
-							type: "number",
-							match: amount,
-							use$: true,
-						},
-						found.length,
-						schemaVariables,
-						{
-							targetName: `${JSON.stringify(
-								schema.contains[i]
-							)} amount`,
-						}
-					)
-				} catch (error) {
-					if (error instanceof ValueError) {
-						throw new AmountError(error.message)
-					}
-
-					throw error
+				return validateType(contain, v, schemaVariables, {
+					targetName: `${options.targetName}[${vI}]`,
+				})
+			} catch (error) {
+				if (!contain) {
+					return false
 				}
+
+				return false
 			}
+		})
 
-			// if (
-			// 	typeof schema.contains[i].amount === "number" ||
-			// 	typeof schema.contains[i].amount === "string"
-			// ) {
-			// 	if (
-			// 		found.length !==
-			// 		useVariable(
-			// 			schema.contains[i].amount,
-			// 			schemaVariables,
-			// 			{
-			// 				type: "number",
-			// 			},
-			// 			schema.use$
-			// 		)
-			// 	) {
-			// 		throw new AmountError(
-			// 			`${JSON.stringify(
-			// 				schema.contains[i]
-			// 			)} must be included ${schema.contains[i].amount} times`
-			// 		)
-			// 	}
-			// }
+		const amount = contain.amount
+		if (typeof amount !== "undefined") {
+			try {
+				validateType(
+					{
+						type: "number",
+						match: amount,
+						use$: contain.required,
+					},
+					found.length,
+					schemaVariables,
+					{
+						targetName: `${JSON.stringify(contain)} amount`,
+					}
+				)
+			} catch (error) {
+				if (error instanceof ValueError) {
+					throw new AmountError(error.message)
+				}
 
-			// const amount = schema.contains[i].amount
-			// if (typeof amount === "object") {
-			// 	if (
-			// 		amount.min &&
-			// 		found.length <
-			// 			useVariable(
-			// 				amount.min,
-			// 				schemaVariables,
-			// 				{
-			// 					type: "number",
-			// 				},
-			// 				schema.use$
-			// 			)
-			// 	) {
-			// 		throw new AmountError(
-			// 			`${JSON.stringify(
-			// 				schema.contains[i]
-			// 			)} must be included at least ${amount.min} times`
-			// 		)
-			// 	}
-			// 	if (
-			// 		amount.max &&
-			// 		found.length >
-			// 			useVariable(
-			// 				amount.max,
-			// 				schemaVariables,
-			// 				{
-			// 					type: "number",
-			// 				},
-			// 				schema.use$
-			// 			)
-			// 	) {
-			// 		throw new AmountError(
-			// 			`${JSON.stringify(
-			// 				schema.contains[i]
-			// 			)} must be included not more than ${amount.max} times`
-			// 		)
-			// 	}
-			// }
+				throw error
+			}
+		}
+
+		return found.length
+	}
+
+	const contains = schema.contains
+	if (contains) {
+		let foundCount = 0
+
+		if (Array.isArray(contains)) {
+			for (let i = 0; i < contains.length; i++) {
+				if (!contains[i].required) {
+					continue
+				}
+
+				foundCount += matchContain(contains[i])
+			}
+		} else {
+			foundCount += matchContain(contains)
+		}
+
+		if (schema.strict && foundCount < target.length) {
+			throw new TypeValidationError(
+				`Not all array entries match contain schema`,
+				{
+					type: "validation",
+					originType: "array",
+					errorType: "strictNotSatisfied",
+					schemaProperty: "contains",
+					schema: JSON.stringify(contains),
+				}
+			)
 		}
 	}
 
