@@ -58,6 +58,10 @@ export class TypeValidationError extends TVError {
 		}
 		super(message, parsedCause)
 	}
+
+	get cause(): TypeValidationCause {
+		return this.cause
+	}
 }
 
 export class SchemaError extends TVError {
@@ -68,6 +72,10 @@ export class SchemaError extends TVError {
 		}
 		super(message, parsedCause)
 	}
+
+	get cause(): SchemaCause {
+		return this.cause
+	}
 }
 
 export class DynamicSchemaError extends TVError {
@@ -77,6 +85,10 @@ export class DynamicSchemaError extends TVError {
 			schema: JSON.stringify(cause.schema),
 		}
 		super(message, parsedCause)
+	}
+
+	get cause(): DynamicSchemaCause {
+		return this.cause
 	}
 }
 
