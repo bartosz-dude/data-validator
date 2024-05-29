@@ -1,16 +1,7 @@
-import {
-	RequiredError,
-	SchemaError,
-	TypeValidationError,
-	ValueError,
-} from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
-import {
-	BigintSchema,
-	NumberSchema,
-	SchemaVariable,
-} from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import resolveVar from "../dynamicSchema/resolveVar"
+import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
+import { BigintSchema, SchemaVariable } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -23,76 +14,100 @@ export default function bigintValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "bigint") {
-		throw new TypeValidationError(`${options.targetName} is not an bigint`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "bigint",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
+	// match
 	if (typeof schema.match === "bigint" || typeof schema.match === "string") {
-		if (
-			target !==
-			useVariable(
-				schema.match,
-				schemaVariables,
-				{
-					type: "bigint",
+		const matchValue = resolveVar<BigintSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as bigint
+		validate(matchValue, {
+			type: "bigint",
+		})
+
+		if (target !== matchValue) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's BigintSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be ${schema.match}`
-			)
+			})
 		}
 	}
 
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "bigint" || typeof v === "string") {
-				return useVariable(
-					v,
-					schemaVariables,
-					{
-						type: "bigint",
-					},
-					schema.use$
-				)
+				const matchValue = resolveVar<BigintSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as bigint
+				validate(matchValue, {
+					type: "bigint",
+				})
+
+				return matchValue
 			}
 
 			if (typeof v === "object") {
+				const min = resolveVar<BigintSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as bigint
+				validate(min, {
+					type: "bigint",
+				})
+
+				const max = resolveVar<BigintSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as bigint
+				validate(max, {
+					type: "bigint",
+				})
+
 				return {
-					min: useVariable(
-						v.min,
-						schemaVariables,
-						{
-							type: "bigint",
-						},
-						schema.use$
-					),
-					max: useVariable(
-						v.max,
-						schemaVariables,
-						{
-							type: "bigint",
-						},
-						schema.use$
-					),
+					min: min,
+					max: max,
 				}
 			}
 
@@ -100,11 +115,18 @@ export default function bigintValidator(
 		})
 
 		if (
-			match.some((v) => typeof v === "number") &&
+			match.some((v) => typeof v === "bigint") &&
 			match.some((v) => typeof v === "object")
 		) {
 			throw new SchemaError(
-				`You cannot mix numbers and ranges in single bigint match declaration`
+				`You cannot mix bigints and ranges in single bigint match declaration`,
+				{
+					errorType: "mixedTypes",
+					schema: schema,
+					schemaProperty: "match",
+					schemaType: "bigint",
+					type: "schema",
+				}
 			)
 		}
 
@@ -112,11 +134,16 @@ export default function bigintValidator(
 			match.every((v) => typeof v === "bigint") &&
 			!match.includes(target)
 		) {
-			throw new ValueError(
-				`${options.targetName} must be contained in '${JSON.stringify(
-					match
-				)}'`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's BigintSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
 		let failedMatches = 0
@@ -141,46 +168,65 @@ export default function bigintValidator(
 		}
 
 		if (failedMatches === match.length) {
-			throw new ValueError(
-				`${options.targetName} must be contained in one of these ${match}`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's BigintSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		if (
-			typeof schema.match.min !== "undefined" &&
-			target <
-				useVariable(
-					schema.match.min,
-					schemaVariables,
-					{
-						type: "bigint",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be higher or equal ${schema.match.min}`
-			)
+		const min = resolveVar<BigintSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as bigint
+		validate(min, {
+			type: "bigint",
+		})
+		if (typeof schema.match.min !== "undefined" && target < min) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's BigintSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
-		if (
-			typeof schema.match.max !== "undefined" &&
-			target >
-				useVariable(
-					schema.match.max,
-					schemaVariables,
-					{
-						type: "bigint",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be lower or equal ${schema.match.max}`
-			)
+		const max = resolveVar<BigintSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as bigint
+		validate(max, {
+			type: "bigint",
+		})
+		if (typeof schema.match.max !== "undefined" && target > max) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's BigintSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "bigint",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
+	}
+
+	if (typeof schema.$ === "string") {
+		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

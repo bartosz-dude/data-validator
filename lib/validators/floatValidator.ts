@@ -1,12 +1,13 @@
+import resolveVar from "../dynamicSchema/resolveVar"
 import {
+	MatchError,
 	RequiredError,
 	SchemaError,
+	TypeError,
 	TypeValidationError,
-	ValueError,
 } from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
-import { FloatSchema, IntegerSchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import { FloatSchema } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -19,84 +20,120 @@ export default function floatValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "number") {
-		throw new TypeValidationError(`${options.targetName} is not a number`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "float",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
+	// fraction required
 	if (schema.fractionRequired) {
 		if (Math.trunc(target) === target) {
 			throw new TypeValidationError(
-				`${options.targetName} is not a float`
+				`${options.targetName} is not a fraction`,
+				{
+					errorType: "notSatisfied",
+					schema: schema,
+					schemaProperty: "fractionRequired",
+					schemaType: "float",
+					target: {
+						value: target,
+						name: targetName,
+					},
+					type: "validation",
+				}
 			)
 		}
 	}
 
+	// match
 	if (typeof schema.match === "number" || typeof schema.match === "string") {
-		if (
-			target !==
-			useVariable(
-				schema.match,
-				schemaVariables,
-				{
-					type: "float",
+		const matchValue = resolveVar<FloatSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(matchValue, {
+			type: "float",
+		})
+
+		if (target !== matchValue) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's FloatSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be ${schema.match}`
-			)
+			})
 		}
 	}
 
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "number" || typeof v === "string") {
-				return useVariable(
-					v,
-					schemaVariables,
-					{
-						type: "number",
-					},
-					schema.use$
-				)
+				const matchValue = resolveVar<FloatSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(matchValue, {
+					type: "float",
+				})
+
+				return matchValue
 			}
 
 			if (typeof v === "object") {
+				const min = resolveVar<FloatSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(min, {
+					type: "float",
+				})
+
+				const max = resolveVar<FloatSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(max, {
+					type: "float",
+				})
+
 				return {
-					min: useVariable(
-						v.min,
-						schemaVariables,
-						{
-							type: "number",
-						},
-						schema.use$
-					),
-					max: useVariable(
-						v.max,
-						schemaVariables,
-						{
-							type: "number",
-						},
-						schema.use$
-					),
+					min: min,
+					max: max,
 				}
 			}
 
@@ -108,7 +145,14 @@ export default function floatValidator(
 			match.some((v) => typeof v === "object")
 		) {
 			throw new SchemaError(
-				`You cannot mix numbers and ranges in single float match declaration`
+				`You cannot mix numbers and ranges in single number match declaration`,
+				{
+					errorType: "mixedTypes",
+					schema: schema,
+					schemaProperty: "match",
+					schemaType: "float",
+					type: "schema",
+				}
 			)
 		}
 
@@ -116,11 +160,16 @@ export default function floatValidator(
 			match.every((v) => typeof v === "number") &&
 			!match.includes(target)
 		) {
-			throw new ValueError(
-				`${options.targetName} must be contained in '${JSON.stringify(
-					match
-				)}'`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's FloatSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
 		let failedMatches = 0
@@ -145,45 +194,60 @@ export default function floatValidator(
 		}
 
 		if (failedMatches === match.length) {
-			throw new ValueError(
-				`${options.targetName} must be contained in one of these ${match}`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's FloatSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		if (
-			typeof schema.match.min !== "undefined" &&
-			target <
-				useVariable(
-					schema.match.min,
-					schemaVariables,
-					{
-						type: "float",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be higher or equal ${schema.match.min}`
-			)
+		const min = resolveVar<FloatSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(min, {
+			type: "float",
+		})
+		if (typeof schema.match.min !== "undefined" && target < min) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's FloatSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
-		if (
-			typeof schema.match.max !== "undefined" &&
-			target >
-				useVariable(
-					schema.match.max,
-					schemaVariables,
-					{
-						type: "float",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be lower or equal ${schema.match.max}`
-			)
+		const max = resolveVar<FloatSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(max, {
+			type: "float",
+		})
+		if (typeof schema.match.max !== "undefined" && target > max) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's FloatSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "float",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 

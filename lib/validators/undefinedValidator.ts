@@ -1,4 +1,4 @@
-import { RequiredError, TypeValidationError } from "../Errors"
+import { TypeError } from "../Errors"
 import { UndefinedSchema } from "../types/schemaTypes"
 
 interface Options {
@@ -11,16 +11,18 @@ export default function undefinedValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
-	// if (typeof target === "undefined") {
-	// 	if (schema.required) {
-	// 		throw new RequiredError(`${options.targetName} is required`)
-	// 	}
-	// 	return true
-	// }
-
+	// type
 	if (target !== undefined) {
-		throw new TypeValidationError(`${options.targetName} is not undefined`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "undefined",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
 	return true

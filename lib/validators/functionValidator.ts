@@ -1,7 +1,7 @@
-import { RequiredError, TypeValidationError } from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
-import { FunctionSchema, NullSchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import resolveVar from "../dynamicSchema/resolveVar"
+import { RequiredError, TypeError } from "../Errors"
+import { FunctionSchema } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -14,25 +14,36 @@ export default function functionValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "function",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "function") {
-		throw new TypeValidationError(`${options.targetName} is not a function`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "function",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
 	return true

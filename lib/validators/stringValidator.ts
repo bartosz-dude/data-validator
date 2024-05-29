@@ -1,13 +1,12 @@
+import resolveVar from "../dynamicSchema/resolveVar"
 import {
-	LengthError,
+	MatchError,
 	RequiredError,
+	TypeError,
 	TypeValidationError,
-	ValueError,
-	VariableValueError,
 } from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
 import { StringSchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import validate, { SchemaVariables } from "../validate"
 import validateType from "../validateType"
 
 interface Options {
@@ -21,27 +20,39 @@ export default function stringValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "string",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "string") {
-		throw new TypeValidationError(`${options.targetName} is not a string`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "string",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
+	// length
 	if (typeof schema.length !== "undefined") {
 		try {
 			validateType(
@@ -57,120 +68,94 @@ export default function stringValidator(
 				}
 			)
 		} catch (error) {
-			if (error instanceof ValueError) {
-				throw new LengthError(error.message)
+			if (error instanceof MatchError) {
+				throw new TypeValidationError(
+					`${targetName} length does not match`,
+					{
+						type: "validation",
+						errorType: "notSatisfied",
+						schema: schema,
+						schemaProperty: "length",
+						schemaType: "string",
+						target: {
+							value: target,
+							name: targetName,
+						},
+					}
+				)
 			}
 
 			throw error
 		}
 	}
 
-	// if (
-	// 	typeof schema.length === "number" ||
-	// 	typeof schema.length === "string"
-	// ) {
-	// 	if (
-	// 		target.length !==
-	// 		useVariable(
-	// 			schema.length,
-	// 			schemaVariables,
-	// 			{
-	// 				type: "number",
-	// 			},
-	// 			schema.use$
-	// 		)
-	// 	) {
-	// 		throw new LengthError(
-	// 			`${options.targetName} must have length ${schema.length}`
-	// 		)
-	// 	}
-	// }
-
-	// if (typeof schema.length == "object") {
-	// 	validateType(
-	// 		{
-	// 			type: "number",
-	// 			match: schema.length,
-	// 			use$: true,
-	// 		},
-	// 		target.length,
-	// 		schemaVariables,
-	// 		{
-	// 			targetName: `${options.targetName} length`,
-	// 		}
-	// 	)
-	// 	if (
-	// 		schema.length.min &&
-	// 		target.length <
-	// 			useVariable(
-	// 				schema.length.min,
-	// 				schemaVariables,
-	// 				{
-	// 					type: "number",
-	// 				},
-	// 				schema.use$
-	// 			)
-	// 	) {
-	// 		throw new LengthError(
-	// 			`${options.targetName} length must be at least ${schema.length.min}`
-	// 		)
-	// 	}
-	// 	if (
-	// 		schema.length.max &&
-	// 		target.length >
-	// 			useVariable(
-	// 				schema.length.max,
-	// 				schemaVariables,
-	// 				{
-	// 					type: "number",
-	// 				},
-	// 				schema.use$
-	// 			)
-	// 	) {
-	// 		throw new LengthError(
-	// 			`${options.targetName} length must not exceed ${schema.length.max}`
-	// 		)
-	// 	}
-	// }
-
+	// match
 	if (Array.isArray(schema.match)) {
 		if (!schema.match.some((v) => v === target)) {
-			throw new ValueError(
-				`${options.targetName} is not contained in ${JSON.stringify(
-					schema.match
-				)}`
-			)
+			throw new MatchError({
+				schema: schema,
+				schemaType: "string",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 
 	if (typeof schema.match === "string") {
-		const matchVal = useVariable(
-			schema.match,
-			schemaVariables,
-			undefined,
-			schema.use$
+		const matchVal = resolveVar<StringSchema>(
+			"match",
+			schema,
+			schemaVariables
 		) as string | string[]
+
+		validate(matchVal, [
+			{
+				type: "string",
+			},
+			{
+				type: "array",
+				contains: {
+					required: true,
+					type: "string",
+				},
+			},
+		])
 
 		if (schema.use$ && target.match(/\$.*/) && Array.isArray(matchVal)) {
 			if (!matchVal.every((v) => typeof v === "string")) {
-				throw new VariableValueError(
-					`'${schema.match}' must contain only strings`
-				)
+				throw new MatchError({
+					schema: schema,
+					schemaType: "string",
+					target: {
+						value: target,
+						name: targetName,
+					},
+				})
 			}
 
 			if (!matchVal.some((v) => v === target)) {
-				throw new ValueError(
-					`${options.targetName} is not contained in ${JSON.stringify(
-						schema.match
-					)}`
-				)
+				throw new MatchError({
+					schema: schema,
+					schemaType: "string",
+					target: {
+						value: target,
+						name: targetName,
+					},
+				})
 			}
 		}
 
 		if (!Array.isArray(matchVal) && target !== matchVal) {
-			throw new ValueError(
-				`${options.targetName} is not "${schema.match}"`
-			)
+			throw new MatchError({
+				schema: schema,
+				schemaType: "string",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 
@@ -178,11 +163,14 @@ export default function stringValidator(
 		const regex = new RegExp(schema.match as RegExp)
 
 		if (!regex.test(target)) {
-			throw new ValueError(
-				`${options.targetName} does not match ${JSON.stringify(
-					schema.match
-				)}`
-			)
+			throw new MatchError({
+				schema: schema,
+				schemaType: "string",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 

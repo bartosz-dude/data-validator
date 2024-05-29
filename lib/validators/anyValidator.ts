@@ -1,7 +1,7 @@
+import resolveVar from "../dynamicSchema/resolveVar"
 import { RequiredError } from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
 import { AnySchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -16,27 +16,19 @@ export default function anyValidator(
 	options.targetName ??= target
 	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					schemaProperty: "required",
-					schema: JSON.stringify(schema),
-					type: "any",
-				},
-				{
-					type: "boolean",
-				},
-				schema.use$
-			)
-		) {
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
 			throw new RequiredError({
-				type: "any",
-				schema: JSON.stringify(schema),
-				targetName: targetName,
-				targetValue: target,
+				schema: schema,
+				schemaType: "any",
+				target: {
+					value: target,
+					name: targetName,
+				},
 			})
 		}
 		return true

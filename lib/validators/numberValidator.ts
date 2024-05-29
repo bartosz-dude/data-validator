@@ -1,14 +1,7 @@
-import {
-	MatchError,
-	RequiredError,
-	SchemaError,
-	TypeError,
-	TypeValidationError,
-	ValueError,
-} from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
-import { NumberSchema, SchemaVariable, TypeSchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import resolveVar from "../dynamicSchema/resolveVar"
+import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
+import { NumberSchema, SchemaVariable } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -23,65 +16,56 @@ export default function numberValidator(
 	options.targetName ??= target
 	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					schemaProperty: "required",
-					schema: JSON.stringify(schema),
-					type: "number",
-				},
-				{
-					type: "boolean",
-				},
-				schema.use$
-			)
-		) {
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
 			throw new RequiredError({
-				schema: JSON.stringify(schema),
-				targetName: targetName,
-				targetValue: target,
-				type: "number",
+				schema: schema,
+				schemaType: "number",
+				target: {
+					value: target,
+					name: targetName,
+				},
 			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "number") {
 		throw new TypeError({
-			schema: JSON.stringify(schema),
-			targetName: targetName,
-			targetValue: target,
-			type: "number",
+			schema: schema,
+			schemaType: "number",
+			target: {
+				value: target,
+				name: targetName,
+			},
 		})
 	}
 
+	// match
 	if (typeof schema.match === "number" || typeof schema.match === "string") {
-		const matchValue = useVariable(
-			schema.match,
-			schemaVariables,
-			{
-				schemaProperty: "match",
-				schema: JSON.stringify(schema),
-				type: "number",
-			},
-			{
-				type: "number",
-			},
-			schema.use$
-		)
+		const matchValue = resolveVar<NumberSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(matchValue, {
+			type: "number",
+		})
+
 		if (target !== matchValue) {
 			throw new MatchError({
-				schema: JSON.stringify(schema),
-				targetName: targetName,
-				targetValue: target,
-				type: "number",
-				details: {
-					type: "number",
+				// what is wrong with schema here ? it's NumberSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "number",
+				target: {
 					value: target,
-					valueSchema: schema.match,
+					name: targetName,
 				},
 			})
 		}
@@ -90,49 +74,40 @@ export default function numberValidator(
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "number" || typeof v === "string") {
-				return useVariable(
-					v,
-					schemaVariables,
-					{
-						schemaProperty: "match[]",
-						schema: JSON.stringify(schema),
-						type: "number",
-					},
-					{
-						type: "number",
-					},
-					schema.use$
-				)
+				const matchValue = resolveVar<NumberSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(matchValue, {
+					type: "number",
+				})
+
+				return matchValue
 			}
 
 			if (typeof v === "object") {
+				const min = resolveVar<NumberSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(min, {
+					type: "number",
+				})
+
+				const max = resolveVar<NumberSchema>(
+					"match",
+					schema,
+					schemaVariables
+				) as number
+				validate(max, {
+					type: "number",
+				})
+
 				return {
-					min: useVariable(
-						v.min,
-						schemaVariables,
-						{
-							schemaProperty: "match[].min",
-							schema: JSON.stringify(schema),
-							type: "number",
-						},
-						{
-							type: "number",
-						},
-						schema.use$
-					),
-					max: useVariable(
-						v.max,
-						schemaVariables,
-						{
-							schemaProperty: "match[].max",
-							schema: JSON.stringify(schema),
-							type: "number",
-						},
-						{
-							type: "number",
-						},
-						schema.use$
-					),
+					min: min,
+					max: max,
 				}
 			}
 
@@ -144,7 +119,14 @@ export default function numberValidator(
 			match.some((v) => typeof v === "object")
 		) {
 			throw new SchemaError(
-				`You cannot mix numbers and ranges in single number match declaration`
+				`You cannot mix numbers and ranges in single number match declaration`,
+				{
+					errorType: "mixedTypes",
+					schema: schema,
+					schemaProperty: "match",
+					schemaType: "number",
+					type: "schema",
+				}
 			)
 		}
 
@@ -152,11 +134,16 @@ export default function numberValidator(
 			match.every((v) => typeof v === "number") &&
 			!match.includes(target)
 		) {
-			throw new ValueError(
-				`${options.targetName} must be contained in '${JSON.stringify(
-					match
-				)}'`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's NumberSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "number",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
 		let failedMatches = 0
@@ -181,55 +168,60 @@ export default function numberValidator(
 		}
 
 		if (failedMatches === match.length) {
-			throw new ValueError(
-				`${options.targetName} must be contained in one of these ${match}`
-			)
+			throw new MatchError({
+				// what is wrong with schema here ? it's NumberSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "number",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		if (
-			typeof schema.match.min !== "undefined" &&
-			target <
-				useVariable(
-					schema.match.min,
-					schemaVariables,
-					{
-						schemaProperty: "match.min",
-						schema: JSON.stringify(schema),
-						type: "number",
-					},
-					{
-						type: "number",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be higher or equal ${schema.match.min}`
-			)
+		const min = resolveVar<NumberSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(min, {
+			type: "number",
+		})
+		if (typeof schema.match.min !== "undefined" && target < min) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's NumberSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "number",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 
-		if (
-			typeof schema.match.max !== "undefined" &&
-			target >
-				useVariable(
-					schema.match.max,
-					schemaVariables,
-					{
-						schemaProperty: "match.max",
-						schema: JSON.stringify(schema),
-						type: "number",
-					},
-					{
-						type: "number",
-					},
-					schema.use$
-				)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be lower or equal ${schema.match.max}`
-			)
+		const max = resolveVar<NumberSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as number
+		validate(max, {
+			type: "number",
+		})
+		if (typeof schema.match.max !== "undefined" && target > max) {
+			throw new MatchError({
+				// what is wrong with schema here ? it's NumberSchema so why the complaining
+				// @ts-ignore
+				schema: schema,
+				schemaType: "number",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 	}
 

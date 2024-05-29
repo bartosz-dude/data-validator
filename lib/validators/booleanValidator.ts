@@ -1,7 +1,7 @@
-import { RequiredError, TypeValidationError, ValueError } from "../Errors"
-import useVariable from "../schemaVariables/useVariable"
+import resolveVar from "../dynamicSchema/resolveVar"
+import { MatchError, RequiredError, TypeError } from "../Errors"
 import { BooleanSchema, SchemaVariable } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import validate, { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -14,42 +14,58 @@ export default function booleanValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "boolean",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new RequiredError(`${options.targetName} is required`)
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "boolean") {
-		throw new TypeValidationError(`${options.targetName} is not a boolean`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "boolean",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
+	// match
 	if (typeof schema.match !== "undefined") {
-		if (
-			target !==
-			useVariable(
-				schema.match,
-				schemaVariables,
-				{
-					type: "boolean",
+		const matchValue = resolveVar<BooleanSchema>(
+			"match",
+			schema,
+			schemaVariables
+		) as boolean
+		validate(matchValue, {
+			type: "boolean",
+		})
+
+		if (target !== matchValue) {
+			throw new MatchError({
+				schema: schema,
+				schemaType: "boolean",
+				target: {
+					value: target,
+					name: targetName,
 				},
-				schema.use$
-			)
-		) {
-			throw new ValueError(
-				`${options.targetName} must be ${schema.match}`
-			)
+			})
 		}
 	}
 

@@ -1,12 +1,8 @@
-import {
-	PropertyError,
-	RequiredError,
-	TypeValidationError,
-	ValueError,
-} from "../Errors"
-import { ObjectSchema, TypeSchema } from "../types/schemaTypes"
+import resolveVar from "../dynamicSchema/resolveVar"
+import { RequiredError, TypeError, TypeValidationError } from "../Errors"
+import { ObjectSchema } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 import validateType from "../validateType"
-import { SchemaVariables } from "../validate"
 
 interface Options {
 	targetName?: string
@@ -19,22 +15,47 @@ export default function objectValidator(
 	options: Options = {}
 ) {
 	options.targetName ??= JSON.stringify(target)
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (schema.required) {
-			throw new RequiredError(`${options.targetName} is required`)
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
+			throw new RequiredError({
+				schema: schema,
+				schemaType: "object",
+				target: {
+					value: target,
+					name: targetName,
+				},
+			})
 		}
 		return true
 	}
 
+	// type
 	if (typeof target !== "object") {
-		throw new TypeValidationError(`${options.targetName} is not an object`)
+		throw new TypeError({
+			schema: schema,
+			schemaType: "object",
+			target: {
+				value: target,
+				name: targetName,
+			},
+		})
 	}
 
+	// matchProperties
 	if (schema.matchProperties) {
 		const schemaProps = Object.keys(schema.matchProperties)
 		const targetProps = Object.keys(target)
 
+		// this is pointless (?)
+		// next loop just does validateType which should check required
+		// though not sure
+		/*
 		const requiredProps = Object.entries(schema.matchProperties)
 			.filter((v) => {
 				const vSchema = v[1]
@@ -61,17 +82,26 @@ export default function objectValidator(
 
 		const requiredPropsNames = requiredProps.map((v) => v[0])
 
-		for (const elem of requiredPropsNames) {
-			if (!targetProps.includes(elem)) {
-				throw new RequiredError(
-					`${options.targetName} needs to contain '${elem}' property`
-				)
+		for (const requiredPropName of requiredPropsNames) {
+			if (!targetProps.includes(requiredPropName)) {
+				throw new RequiredError({
+					schema: schema.matchProperties[
+						requiredPropName
+					] as TypeSchema,
+					schemaType: (
+						schema.matchProperties[requiredPropName] as TypeSchema
+					).type,
+					target: {
+						value: undefined,
+						name: requiredPropName,
+					},
+				})
 			}
-		}
+		}*/
 
-		for (const elem of schemaProps) {
-			const prop = target[elem]
-			const propSchema = schema.matchProperties[elem]
+		for (const schemaPropName of schemaProps) {
+			const prop = target[schemaPropName]
+			const propSchema = schema.matchProperties[schemaPropName]
 
 			if (Array.isArray(propSchema)) {
 				let invalidCount = 0
@@ -87,15 +117,24 @@ export default function objectValidator(
 				}
 
 				if (invalidCount >= propSchema.length) {
-					throw new RequiredError(
-						`${
-							options.targetName
-						} needs to be one of ${JSON.stringify(propSchema)}`
+					throw new TypeValidationError(
+						`${schemaPropName} property must match one of the provided types`,
+						{
+							errorType: "notSatisfied",
+							schema: schema,
+							schemaProperty: `matchProperties`,
+							schemaType: "object",
+							target: {
+								name: schemaPropName,
+								value: prop,
+							},
+							type: "validation",
+						}
 					)
 				}
 			} else {
 				validateType(propSchema, prop, schemaVariables, {
-					targetName: elem,
+					targetName: schemaPropName,
 				})
 			}
 		}

@@ -1,15 +1,13 @@
+import resolveVar from "../dynamicSchema/resolveVar"
 import {
-	AmountError,
-	LengthError,
+	MatchError,
 	RequiredError,
 	TypeError,
 	TypeValidationError,
-	ValueError,
 } from "../Errors"
 import { ArraySchema, SchemaVariable, TypeSchema } from "../types/schemaTypes"
+import validate, { SchemaVariables } from "../validate"
 import validateType from "../validateType"
-import { SchemaVariables } from "../validate"
-import useVariable from "../schemaVariables/useVariable"
 
 interface Options {
 	targetName?: string
@@ -21,36 +19,40 @@ export default function arrayValidator(
 	schemaVariables: SchemaVariables,
 	options: Options = {}
 ) {
-	options.targetName ??= JSON.stringify(target)
+	options.targetName ??= target
+	const targetName = options.targetName as string
 
+	// required
 	if (typeof target === "undefined") {
-		if (
-			useVariable(
-				schema.required,
-				schemaVariables,
-				{
-					type: "boolean",
-				},
-				schema.use$
-			)
-		) {
+		const required = resolveVar("required", schema, schemaVariables)
+		validate(required, { type: "boolean" })
+
+		if (required) {
 			throw new RequiredError({
-				property: options.targetName,
-				schema: JSON.stringify(schema),
-				type: "array",
+				schema: schema,
+				schemaType: "array",
+				target: {
+					value: target,
+					name: targetName,
+				},
 			})
 		}
 		return true
 	}
 
+	// type
 	if (!Array.isArray(target)) {
 		throw new TypeError({
-			property: options.targetName,
-			schema: JSON.stringify(schema),
-			type: "array",
+			schema: schema,
+			schemaType: "array",
+			target: {
+				value: target,
+				name: targetName,
+			},
 		})
 	}
 
+	// length
 	if (typeof schema.length !== "undefined") {
 		try {
 			validateType(
@@ -66,14 +68,24 @@ export default function arrayValidator(
 				}
 			)
 		} catch (error) {
-			if (error instanceof ValueError) {
-				throw new LengthError({
-					schema: JSON.stringify(schema),
-					type: "array",
-					value: target.length,
-					valueSchema: 
-				})
+			if (error instanceof MatchError) {
+				throw new TypeValidationError(
+					`${targetName} length does not match`,
+					{
+						type: "validation",
+						errorType: "notSatisfied",
+						schema: schema,
+						schemaProperty: "length",
+						schemaType: "array",
+						target: {
+							value: target,
+							name: targetName,
+						},
+					}
+				)
 			}
+
+			throw error
 		}
 	}
 
@@ -133,6 +145,7 @@ export default function arrayValidator(
 	// 	}
 	// }
 
+	// match
 	function match(schemaMatch: (TypeSchema | TypeSchema[])[]) {
 		for (let i = 0; i < schemaMatch.length; i++) {
 			const topMatch = schemaMatch[i]
@@ -153,13 +166,15 @@ export default function arrayValidator(
 				}
 
 				if (invalidCount >= topMatch.length) {
-					throw new RequiredError(
-						`${
-							options.targetName
-						} needs to contain one of ${JSON.stringify(
-							schemaMatch[i]
-						)}`
-					)
+					throw new MatchError({
+						schemaType: "array",
+						target: {
+							value: target,
+							name: targetName,
+						},
+						// @ts-expect-error
+						schema: schema,
+					})
 				}
 
 				continue
@@ -187,10 +202,19 @@ export default function arrayValidator(
 		}
 
 		if (invalidCount >= schema.matchOneOf.length) {
-			throw new RequiredError(
-				`${options.targetName} needs to contain one of ${JSON.stringify(
-					schema.matchOneOf
-				)}`
+			throw new TypeValidationError(
+				`${options.targetName} must match one of the provided types`,
+				{
+					errorType: "notSatisfied",
+					schema: schema,
+					schemaProperty: "matchOneOf",
+					schemaType: "array",
+					target: {
+						value: target,
+						name: targetName,
+					},
+					type: "validation",
+				}
 			)
 		}
 	}
@@ -224,26 +248,18 @@ export default function arrayValidator(
 
 		const amount = contain.amount
 		if (typeof amount !== "undefined") {
-			try {
-				validateType(
-					{
-						type: "number",
-						match: amount,
-						use$: contain.required,
-					},
-					found.length,
-					schemaVariables,
-					{
-						targetName: `${JSON.stringify(contain)} amount`,
-					}
-				)
-			} catch (error) {
-				if (error instanceof ValueError) {
-					throw new AmountError(error.message)
+			validateType(
+				{
+					type: "number",
+					match: amount,
+					use$: contain.required,
+				},
+				found.length,
+				schemaVariables,
+				{
+					targetName: `${JSON.stringify(contain)} amount`,
 				}
-
-				throw error
-			}
+			)
 		}
 
 		return found.length
@@ -270,10 +286,14 @@ export default function arrayValidator(
 				`Not all array entries match contain schema`,
 				{
 					type: "validation",
-					originType: "array",
-					errorType: "strictNotSatisfied",
-					schemaProperty: "contains",
-					schema: JSON.stringify(contains),
+					schemaType: "array",
+					errorType: "notSatisfied",
+					schemaProperty: "strict",
+					schema: schema,
+					target: {
+						value: target,
+						name: targetName,
+					},
 				}
 			)
 		}

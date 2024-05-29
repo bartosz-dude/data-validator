@@ -155,7 +155,6 @@ export type ArraySchema = GenericSchema & {
 	/**
 	 * Determines if all of these are contained in the array
 	 */
-
 	contains?:
 		| (TypeSchema & {
 				required: true
