@@ -1,3 +1,4 @@
+import DynamicSchema from "./dynamicSchema/dynamicSchema"
 import { TypeValidationError } from "./Errors"
 import { SchemaVariable, TypeSchema } from "./types/schemaTypes"
 import validateType from "./validateType"
@@ -9,7 +10,7 @@ export default function validate(
 	schema: TypeSchema | TypeSchema[],
 	options: { throwErrors?: boolean } = { throwErrors: true }
 ): boolean {
-	const schemaVariables = new Map<SchemaVariable, any>()
+	const dynamicSchema = new DynamicSchema()
 
 	try {
 		if (Array.isArray(schema)) {
@@ -18,7 +19,7 @@ export default function validate(
 			// @ts-ignore
 			for (const schemaEntry of schema) {
 				try {
-					validateType(schemaEntry, target, schemaVariables)
+					validateType(schemaEntry, target, dynamicSchema)
 				} catch (error) {
 					if (error instanceof TypeValidationError) {
 						invalidCount++
@@ -51,7 +52,7 @@ export default function validate(
 
 			return true
 		} else {
-			return validateType(schema, target, schemaVariables)
+			return validateType(schema, target, dynamicSchema)
 		}
 	} catch (error) {
 		if (!options.throwErrors) {

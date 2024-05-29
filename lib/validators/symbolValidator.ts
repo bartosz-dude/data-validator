@@ -1,7 +1,8 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { RequiredError, TypeError } from "../Errors"
 import { SymbolSchema } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 
 interface Options {
 	targetName?: string
@@ -10,7 +11,7 @@ interface Options {
 export default function symbolValidator(
 	schema: SymbolSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -18,7 +19,7 @@ export default function symbolValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {

@@ -1,3 +1,4 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
 	MatchError,
@@ -6,7 +7,7 @@ import {
 	TypeValidationError,
 } from "../Errors"
 import { StringSchema } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 import validateType from "../validateType"
 
 interface Options {
@@ -16,7 +17,7 @@ interface Options {
 export default function stringValidator(
 	schema: StringSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -24,7 +25,7 @@ export default function stringValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -62,7 +63,7 @@ export default function stringValidator(
 					use$: true,
 				},
 				target.length,
-				schemaVariables,
+				dynamicSchema,
 				{
 					targetName: `${options.targetName} length`,
 				}
@@ -107,7 +108,7 @@ export default function stringValidator(
 		const matchVal = resolveVar<StringSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as string | string[]
 
 		validate(matchVal, [

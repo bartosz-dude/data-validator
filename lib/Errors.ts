@@ -34,13 +34,13 @@ type DynamicSchemaCause<T = SchemaTypes> = {
 		| "wrongSyntax"
 		| "dynamicSchemaDisabled"
 		| string
-	schemaType: T
-	schemaProperty: string
-	schemaPropertyValue: string
-	target: {
+	schemaType?: T
+	schemaProperty?: string
+	schemaPropertyValue?: string
+	target?: {
 		name?: string
 	}
-	schema: TypeSchema
+	schema?: TypeSchema
 }
 
 class TVError<C extends unknown> extends Error {

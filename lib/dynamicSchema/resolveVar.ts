@@ -1,11 +1,11 @@
 import { DynamicSchemaError } from "../Errors"
 import { SchemaVariable, TypeSchema } from "../types/schemaTypes"
-import { SchemaVariables } from "../validate"
+import DynamicSchema from "./dynamicSchema"
 
 export default function resolveVar<T extends TypeSchema>(
 	schemaProperty: keyof T,
 	schema: T,
-	dynamicSchema: SchemaVariables
+	dynamicSchema: DynamicSchema
 ) {
 	if (
 		schema.use$ &&

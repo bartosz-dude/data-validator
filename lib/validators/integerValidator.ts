@@ -1,7 +1,8 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { IntegerSchema, SchemaVariable } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 
 interface Options {
 	targetName?: string
@@ -10,7 +11,7 @@ interface Options {
 export default function integerValidator(
 	schema: IntegerSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -18,7 +19,7 @@ export default function integerValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -51,7 +52,7 @@ export default function integerValidator(
 		const matchValue = resolveVar<IntegerSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(matchValue, {
 			type: "integer",
@@ -77,7 +78,7 @@ export default function integerValidator(
 				const matchValue = resolveVar<IntegerSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(matchValue, {
 					type: "integer",
@@ -90,7 +91,7 @@ export default function integerValidator(
 				const min = resolveVar<IntegerSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(min, {
 					type: "integer",
@@ -99,7 +100,7 @@ export default function integerValidator(
 				const max = resolveVar<IntegerSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(max, {
 					type: "integer",
@@ -185,7 +186,7 @@ export default function integerValidator(
 		const min = resolveVar<IntegerSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(min, {
 			type: "integer",
@@ -206,7 +207,7 @@ export default function integerValidator(
 		const max = resolveVar<IntegerSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(max, {
 			type: "integer",
@@ -226,7 +227,7 @@ export default function integerValidator(
 	}
 
 	if (typeof schema.$ === "string") {
-		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
+		dynamicSchema.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

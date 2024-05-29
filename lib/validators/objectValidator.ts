@@ -1,7 +1,8 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { RequiredError, TypeError, TypeValidationError } from "../Errors"
 import { ObjectSchema } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 import validateType from "../validateType"
 
 interface Options {
@@ -11,7 +12,7 @@ interface Options {
 export default function objectValidator(
 	schema: ObjectSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= JSON.stringify(target)
@@ -19,7 +20,7 @@ export default function objectValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -107,7 +108,7 @@ export default function objectValidator(
 				let invalidCount = 0
 				for (let i = 0; i < propSchema.length; i++) {
 					try {
-						validateType(propSchema[i], prop, schemaVariables, {
+						validateType(propSchema[i], prop, dynamicSchema, {
 							targetName: options.targetName,
 						})
 					} catch (error) {
@@ -133,7 +134,7 @@ export default function objectValidator(
 					)
 				}
 			} else {
-				validateType(propSchema, prop, schemaVariables, {
+				validateType(propSchema, prop, dynamicSchema, {
 					targetName: schemaPropName,
 				})
 			}

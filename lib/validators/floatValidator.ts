@@ -1,3 +1,4 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
 	MatchError,
@@ -7,7 +8,7 @@ import {
 	TypeValidationError,
 } from "../Errors"
 import { FloatSchema } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 
 interface Options {
 	targetName?: string
@@ -16,7 +17,7 @@ interface Options {
 export default function floatValidator(
 	schema: FloatSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -24,7 +25,7 @@ export default function floatValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -77,7 +78,7 @@ export default function floatValidator(
 		const matchValue = resolveVar<FloatSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(matchValue, {
 			type: "float",
@@ -103,7 +104,7 @@ export default function floatValidator(
 				const matchValue = resolveVar<FloatSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(matchValue, {
 					type: "float",
@@ -116,7 +117,7 @@ export default function floatValidator(
 				const min = resolveVar<FloatSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(min, {
 					type: "float",
@@ -125,7 +126,7 @@ export default function floatValidator(
 				const max = resolveVar<FloatSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as number
 				validate(max, {
 					type: "float",
@@ -211,7 +212,7 @@ export default function floatValidator(
 		const min = resolveVar<FloatSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(min, {
 			type: "float",
@@ -232,7 +233,7 @@ export default function floatValidator(
 		const max = resolveVar<FloatSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as number
 		validate(max, {
 			type: "float",

@@ -1,7 +1,8 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { BigintSchema, SchemaVariable } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 
 interface Options {
 	targetName?: string
@@ -10,7 +11,7 @@ interface Options {
 export default function bigintValidator(
 	schema: BigintSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -18,7 +19,7 @@ export default function bigintValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -51,7 +52,7 @@ export default function bigintValidator(
 		const matchValue = resolveVar<BigintSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as bigint
 		validate(matchValue, {
 			type: "bigint",
@@ -77,7 +78,7 @@ export default function bigintValidator(
 				const matchValue = resolveVar<BigintSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as bigint
 				validate(matchValue, {
 					type: "bigint",
@@ -90,7 +91,7 @@ export default function bigintValidator(
 				const min = resolveVar<BigintSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as bigint
 				validate(min, {
 					type: "bigint",
@@ -99,7 +100,7 @@ export default function bigintValidator(
 				const max = resolveVar<BigintSchema>(
 					"match",
 					schema,
-					schemaVariables
+					dynamicSchema
 				) as bigint
 				validate(max, {
 					type: "bigint",
@@ -185,7 +186,7 @@ export default function bigintValidator(
 		const min = resolveVar<BigintSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as bigint
 		validate(min, {
 			type: "bigint",
@@ -206,7 +207,7 @@ export default function bigintValidator(
 		const max = resolveVar<BigintSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as bigint
 		validate(max, {
 			type: "bigint",
@@ -226,7 +227,7 @@ export default function bigintValidator(
 	}
 
 	if (typeof schema.$ === "string") {
-		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
+		dynamicSchema.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

@@ -1,7 +1,8 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, TypeError } from "../Errors"
 import { BooleanSchema, SchemaVariable } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 
 interface Options {
 	targetName?: string
@@ -10,7 +11,7 @@ interface Options {
 export default function booleanValidator(
 	schema: BooleanSchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -18,7 +19,7 @@ export default function booleanValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -51,7 +52,7 @@ export default function booleanValidator(
 		const matchValue = resolveVar<BooleanSchema>(
 			"match",
 			schema,
-			schemaVariables
+			dynamicSchema
 		) as boolean
 		validate(matchValue, {
 			type: "boolean",
@@ -70,7 +71,7 @@ export default function booleanValidator(
 	}
 
 	if (typeof schema.$ === "string") {
-		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
+		dynamicSchema.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

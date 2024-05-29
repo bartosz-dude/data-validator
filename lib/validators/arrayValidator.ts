@@ -1,3 +1,4 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
 	MatchError,
@@ -6,7 +7,7 @@ import {
 	TypeValidationError,
 } from "../Errors"
 import { ArraySchema, SchemaVariable, TypeSchema } from "../types/schemaTypes"
-import validate, { SchemaVariables } from "../validate"
+import validate from "../validate"
 import validateType from "../validateType"
 
 interface Options {
@@ -16,7 +17,7 @@ interface Options {
 export default function arrayValidator(
 	schema: ArraySchema,
 	target: any,
-	schemaVariables: SchemaVariables,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -24,7 +25,7 @@ export default function arrayValidator(
 
 	// required
 	if (typeof target === "undefined") {
-		const required = resolveVar("required", schema, schemaVariables)
+		const required = resolveVar("required", schema, dynamicSchema)
 		validate(required, { type: "boolean" })
 
 		if (required) {
@@ -62,7 +63,7 @@ export default function arrayValidator(
 					use$: true,
 				},
 				target.length,
-				schemaVariables,
+				dynamicSchema,
 				{
 					targetName: `${options.targetName} length`,
 				}
@@ -156,7 +157,7 @@ export default function arrayValidator(
 					const midMatch = topMatch[j]
 
 					try {
-						validateType(midMatch, target[i], schemaVariables, {
+						validateType(midMatch, target[i], dynamicSchema, {
 							targetName: `${options.targetName}[${i}]`,
 						})
 					} catch (error) {
@@ -180,7 +181,7 @@ export default function arrayValidator(
 				continue
 			}
 
-			validateType(topMatch, target[i], schemaVariables, {
+			validateType(topMatch, target[i], dynamicSchema, {
 				targetName: `${options.targetName}[${i}]`,
 			})
 		}
@@ -234,7 +235,7 @@ export default function arrayValidator(
 					return false
 				}
 
-				return validateType(contain, v, schemaVariables, {
+				return validateType(contain, v, dynamicSchema, {
 					targetName: `${options.targetName}[${vI}]`,
 				})
 			} catch (error) {
@@ -255,7 +256,7 @@ export default function arrayValidator(
 					use$: contain.required,
 				},
 				found.length,
-				schemaVariables,
+				dynamicSchema,
 				{
 					targetName: `${JSON.stringify(contain)} amount`,
 				}
@@ -300,7 +301,7 @@ export default function arrayValidator(
 	}
 
 	if (typeof schema.$ === "string") {
-		schemaVariables.set(("$" + schema.$) as SchemaVariable, target)
+		dynamicSchema.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true
