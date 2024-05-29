@@ -2,6 +2,10 @@ import { TypeSchema } from "./types/schemaTypes"
 
 export type SchemaTypes = Pick<TypeSchema, "type">["type"]
 
+type ParsedCause<T extends unknown> = T & {
+	target: { value: string }
+}
+
 type TypeValidationCause<T = SchemaTypes> = {
 	type: "validation"
 	errorType: "notSatisfied" | string
@@ -39,56 +43,49 @@ type DynamicSchemaCause<T = SchemaTypes> = {
 	schema: TypeSchema
 }
 
-class TVError extends Error {
-	constructor(message: string, cause: any) {
+class TVError<C extends unknown> extends Error {
+	#cause: any
+
+	constructor(message: string, cause: C) {
 		super(message + "; read cause for details")
 		this.name = this.constructor.name
 		this.cause = cause
 	}
+
+	set cause(cause: C) {
+		this.#cause = cause
+	}
+
+	get cause(): C {
+		return this.#cause
+	}
 }
 
-export class TypeValidationError extends TVError {
+export class TypeValidationError extends TVError<TypeValidationCause> {
 	constructor(message: string, cause: TypeValidationCause) {
 		const parsedCause = {
 			...cause,
-			schema: JSON.stringify(cause.schema),
 			target: {
-				value: JSON.stringify(cause.target.value),
+				value: cause.target.value,
+				name:
+					typeof cause.target.name !== "string"
+						? JSON.stringify(cause.target.name)
+						: cause.target.name,
 			},
-		}
+		} as ParsedCause<TypeValidationCause>
 		super(message, parsedCause)
-	}
-
-	get cause(): TypeValidationCause {
-		return this.cause
 	}
 }
 
-export class SchemaError extends TVError {
+export class SchemaError extends TVError<SchemaCause> {
 	constructor(message: string, cause: SchemaCause) {
-		const parsedCause = {
-			...cause,
-			schema: JSON.stringify(cause.schema),
-		}
-		super(message, parsedCause)
-	}
-
-	get cause(): SchemaCause {
-		return this.cause
+		super(message, cause)
 	}
 }
 
-export class DynamicSchemaError extends TVError {
+export class DynamicSchemaError extends TVError<DynamicSchemaCause> {
 	constructor(message: string, cause: DynamicSchemaCause) {
-		const parsedCause = {
-			...cause,
-			schema: JSON.stringify(cause.schema),
-		}
-		super(message, parsedCause)
-	}
-
-	get cause(): DynamicSchemaCause {
-		return this.cause
+		super(message, cause)
 	}
 }
 
