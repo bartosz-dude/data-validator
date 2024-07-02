@@ -147,7 +147,6 @@ export default function numberValidator(
 		let failedMatches = 0
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
-				console.log("matchEntry", matchEntry, match)
 				if (
 					// @ts-ignore
 					typeof matchEntry.min !== "undefined" &&

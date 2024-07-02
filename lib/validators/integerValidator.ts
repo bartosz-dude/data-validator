@@ -1,6 +1,7 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
+import useVar from "../dynamicSchema/useVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { IntegerSchema, SchemaVariable } from "../types/schemaTypes"
 import validate from "../validate"
@@ -76,11 +77,12 @@ export default function integerValidator(
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "number" || typeof v === "string") {
-				const matchValue = resolveVar<IntegerSchema>(
+				const matchValue = useVar<number, IntegerSchema>(
+					v,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
+				)
 				validate(matchValue, {
 					type: "integer",
 				})
@@ -89,24 +91,18 @@ export default function integerValidator(
 			}
 
 			if (typeof v === "object") {
-				const min = resolveVar<IntegerSchema>(
+				const min = useVar<number, IntegerSchema>(
+					v.min,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(min, {
-					type: "integer",
-				})
-
-				const max = resolveVar<IntegerSchema>(
+				)
+				const max = useVar<number, IntegerSchema>(
+					v.max,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(max, {
-					type: "integer",
-				})
-
+				)
 				return {
 					min: min,
 					max: max,
@@ -152,7 +148,9 @@ export default function integerValidator(
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
 				if (
+					// @ts-ignore
 					typeof matchEntry.min !== "undefined" &&
+					// @ts-ignore
 					target < matchEntry.min
 				) {
 					failedMatches++
@@ -160,7 +158,9 @@ export default function integerValidator(
 				}
 
 				if (
+					// @ts-ignore
 					typeof matchEntry.max !== "undefined" &&
+					// @ts-ignore
 					target > matchEntry.max
 				) {
 					failedMatches++
@@ -184,15 +184,18 @@ export default function integerValidator(
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		const min = resolveVar<IntegerSchema>(
+		const match = resolveVar<IntegerSchema>(
 			"match",
 			schema,
 			dynamicSchema
-		) as number
-		validate(min, {
-			type: "integer",
-		})
-		if (typeof schema.match.min !== "undefined" && target < min) {
+		) as { min?: number; max?: number }
+		// validate(min, {
+		// 	type: "integer",
+		// })
+		if (
+			typeof schema.match.min !== "undefined" &&
+			target < (match.min ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's IntegerSchema so why the complaining
 				// @ts-ignore
@@ -213,7 +216,10 @@ export default function integerValidator(
 		validate(max, {
 			type: "integer",
 		})
-		if (typeof schema.match.max !== "undefined" && target > max) {
+		if (
+			typeof schema.match.max !== "undefined" &&
+			target > (match.max ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's IntegerSchema so why the complaining
 				// @ts-ignore

@@ -1,6 +1,7 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
 import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
+import useVar from "../dynamicSchema/useVar"
 import {
 	MatchError,
 	RequiredError,
@@ -102,11 +103,12 @@ export default function floatValidator(
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "number" || typeof v === "string") {
-				const matchValue = resolveVar<FloatSchema>(
+				const matchValue = useVar<number, FloatSchema>(
+					v,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
+				)
 				validate(matchValue, {
 					type: "float",
 				})
@@ -115,24 +117,18 @@ export default function floatValidator(
 			}
 
 			if (typeof v === "object") {
-				const min = resolveVar<FloatSchema>(
+				const min = useVar<number, FloatSchema>(
+					v.min,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(min, {
-					type: "float",
-				})
-
-				const max = resolveVar<FloatSchema>(
+				)
+				const max = useVar<number, FloatSchema>(
+					v.max,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(max, {
-					type: "float",
-				})
-
+				)
 				return {
 					min: min,
 					max: max,
@@ -178,7 +174,9 @@ export default function floatValidator(
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
 				if (
+					// @ts-ignore
 					typeof matchEntry.min !== "undefined" &&
+					// @ts-ignore
 					target < matchEntry.min
 				) {
 					failedMatches++
@@ -186,7 +184,9 @@ export default function floatValidator(
 				}
 
 				if (
+					// @ts-ignore
 					typeof matchEntry.max !== "undefined" &&
+					// @ts-ignore
 					target > matchEntry.max
 				) {
 					failedMatches++
@@ -210,15 +210,15 @@ export default function floatValidator(
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		const min = resolveVar<FloatSchema>(
+		const match = resolveVar<FloatSchema>(
 			"match",
 			schema,
 			dynamicSchema
-		) as number
-		validate(min, {
-			type: "float",
-		})
-		if (typeof schema.match.min !== "undefined" && target < min) {
+		) as { min?: number; max?: number }
+		if (
+			typeof schema.match.min !== "undefined" &&
+			target < (match.min ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's FloatSchema so why the complaining
 				// @ts-ignore
@@ -231,15 +231,10 @@ export default function floatValidator(
 			})
 		}
 
-		const max = resolveVar<FloatSchema>(
-			"match",
-			schema,
-			dynamicSchema
-		) as number
-		validate(max, {
-			type: "float",
-		})
-		if (typeof schema.match.max !== "undefined" && target > max) {
+		if (
+			typeof schema.match.max !== "undefined" &&
+			target > (match.max ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's FloatSchema so why the complaining
 				// @ts-ignore
