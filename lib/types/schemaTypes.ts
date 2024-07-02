@@ -249,7 +249,22 @@ export type ObjectSchema = GenericSchema & {
 	matchProperties?: {
 		[key: string]: TypeSchema | TypeSchema[]
 	}
-}
+} & (
+		| {
+				/**
+				 * @default true
+				 */
+				strict?: boolean
+				use$?: false
+		  }
+		| {
+				/**
+				 * @default true
+				 */
+				strict?: boolean | SchemaVariable
+				use$: true
+		  }
+	)
 
 export type BigintSchema = GenericSchema & {
 	/**

@@ -16,6 +16,7 @@ export default function objectValidator(
 	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
+	schema.strict ??= true
 	options.targetName ??= JSON.stringify(target)
 	const targetName = options.targetName as string
 
@@ -101,6 +102,7 @@ export default function objectValidator(
 			}
 		}*/
 
+		let matchedProps = 0
 		for (const schemaPropName of schemaProps) {
 			const prop = target[schemaPropName]
 			const propSchema = schema.matchProperties[schemaPropName]
@@ -134,11 +136,30 @@ export default function objectValidator(
 						}
 					)
 				}
+				matchedProps++
 			} else {
 				validateType(propSchema, prop, dynamicSchema, {
 					targetName: schemaPropName,
 				})
+				matchedProps++
 			}
+		}
+
+		if (schema.strict && matchedProps < targetProps.length) {
+			throw new TypeValidationError(
+				`${options.targetName} can only have properties defined in matchProperties`,
+				{
+					errorType: "notSatisfied",
+					schema: schema,
+					schemaProperty: `matchProperties`,
+					schemaType: "object",
+					target: {
+						name: options.targetName,
+						value: target,
+					},
+					type: "validation",
+				}
+			)
 		}
 	}
 
