@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest"
 import anyValidator from "../lib/validators/anyValidator"
 import numberValidator from "../lib/validators/numberValidator"
-import { RequiredError, TypeValidationError, ValueError } from "../lib/Errors"
+import { RequiredError, TypeValidationError } from "../lib/Errors"
+import DynamicSchema from "../lib/dynamicSchema/dynamicSchema"
 
 describe("required", () => {
 	test("undefined is accepted when value is not required", () => {
@@ -12,7 +13,7 @@ describe("required", () => {
 					required: false,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -25,7 +26,7 @@ describe("required", () => {
 					required: true,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -39,7 +40,7 @@ describe("type", () => {
 					type: "number",
 				},
 				1,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -51,7 +52,7 @@ describe("type", () => {
 					type: "number",
 				},
 				"",
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -66,7 +67,7 @@ describe("match", () => {
 					match: 1,
 				},
 				1,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -79,9 +80,9 @@ describe("match", () => {
 					match: 1,
 				},
 				2,
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("number more than min is accepted", () => {
@@ -94,7 +95,7 @@ describe("match", () => {
 					},
 				},
 				2,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -109,7 +110,7 @@ describe("match", () => {
 					},
 				},
 				1,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -125,7 +126,7 @@ describe("match", () => {
 					},
 				},
 				2,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -140,9 +141,9 @@ describe("match", () => {
 					},
 				},
 				2,
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("number less than min is not accepted", () => {
@@ -155,9 +156,9 @@ describe("match", () => {
 					},
 				},
 				1,
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("number outside less and max is not accepted", () => {
@@ -171,9 +172,9 @@ describe("match", () => {
 					},
 				},
 				4,
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("number in one of the ranges is accepted", () => {
@@ -193,7 +194,7 @@ describe("match", () => {
 					],
 				},
 				6,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -215,8 +216,8 @@ describe("match", () => {
 					],
 				},
 				4,
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 })

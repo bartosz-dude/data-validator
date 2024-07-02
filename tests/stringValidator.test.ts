@@ -1,9 +1,5 @@
-import {
-	LengthError,
-	RequiredError,
-	TypeValidationError,
-	ValueError,
-} from "../lib/Errors"
+import { RequiredError, TypeValidationError } from "../lib/Errors"
+import DynamicSchema from "../lib/dynamicSchema/dynamicSchema"
 import stringValidator from "../lib/validators/stringValidator"
 import { test, expect, describe } from "vitest"
 
@@ -16,7 +12,7 @@ describe("required", () => {
 					required: false,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -29,7 +25,7 @@ describe("required", () => {
 					required: true,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -43,7 +39,7 @@ describe("type", () => {
 					type: "string",
 				},
 				0,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -55,7 +51,7 @@ describe("type", () => {
 					type: "string",
 				},
 				"",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -70,7 +66,7 @@ describe("length", () => {
 					length: 4,
 				},
 				"abcd",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -83,9 +79,9 @@ describe("length", () => {
 					length: 4,
 				},
 				"abcde",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("string with length higher than min is accepted", () => {
@@ -98,7 +94,7 @@ describe("length", () => {
 					},
 				},
 				"abcde",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -113,7 +109,7 @@ describe("length", () => {
 					},
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -129,7 +125,7 @@ describe("length", () => {
 					},
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -144,9 +140,9 @@ describe("length", () => {
 					},
 				},
 				"abcde",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("string with length lower than min is not accepted", () => {
@@ -159,9 +155,9 @@ describe("length", () => {
 					},
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("string with length outside of min and max is not accepted", () => {
@@ -175,9 +171,9 @@ describe("length", () => {
 					},
 				},
 				"abcde",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 })
 
@@ -190,7 +186,7 @@ describe("match", () => {
 					match: "abc",
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -203,9 +199,9 @@ describe("match", () => {
 					match: "abc",
 				},
 				"abcd",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("string matches one of string", () => {
@@ -216,7 +212,7 @@ describe("match", () => {
 					match: ["abc", "abcd", "123"],
 				},
 				"abcd",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -229,9 +225,9 @@ describe("match", () => {
 					match: ["abc", "abcd", "123"],
 				},
 				"a2",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("string matches regex", () => {
@@ -242,7 +238,7 @@ describe("match", () => {
 					match: /ab./,
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -255,8 +251,8 @@ describe("match", () => {
 					match: /ad./,
 				},
 				"abc",
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(ValueError)
+		).toThrowError(TypeValidationError)
 	})
 })

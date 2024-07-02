@@ -1,5 +1,7 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import { TypeError } from "../Errors"
-import { UndefinedSchema } from "../types/schemaTypes"
+import { SchemaVariable, UndefinedSchema } from "../types/schemaTypes"
 
 interface Options {
 	targetName?: string
@@ -8,6 +10,7 @@ interface Options {
 export default function undefinedValidator(
 	schema: UndefinedSchema,
 	target: any,
+	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
 	options.targetName ??= target
@@ -23,6 +26,17 @@ export default function undefinedValidator(
 				name: targetName,
 			},
 		})
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as UndefinedSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	return true

@@ -1,3 +1,4 @@
+import DynamicSchema from "../dynamicSchema/dynamicSchema"
 type ValueType =
 	| "string" // ✔️
 	| "number" // ✔️
@@ -15,97 +16,118 @@ type ValueType =
 	| "any" // ✔️
 
 type GenericSchema = {
+	/**
+	 * Type of the target value
+	 */
 	type: ValueType
 } & (
 	| {
+			/**
+			 * Whether the target value can be undefined
+			 */
 			required?: boolean
+			/**
+			 * When true you can use schema variables in schema
+			 */
 			use$?: false
 	  }
 	| {
+			/**
+			 * Whether the target value can be undefined
+			 */
 			required?: boolean | SchemaVariable
+			/**
+			 * Custom validation function accessible via schema variable
+			 */
+			customValidator?: SchemaVariable | SchemaVariable[]
+			/**
+			 * When true you can use schema variables in schema
+			 */
 			use$: true
 	  }
 )
 
 export type SchemaVariable = `$${string}`
 
+type NumberMatch =
+	| number
+	| number[]
+	| {
+			min?: number
+			max?: number
+	  }
+	| {
+			min?: number
+			max?: number
+	  }[]
+
+type NumberMatchWithVariables =
+	| number
+	| (number | SchemaVariable)[]
+	| SchemaVariable
+	| {
+			min?: number | SchemaVariable
+			max?: number | SchemaVariable
+	  }
+	| {
+			min?: number | SchemaVariable
+			max?: number | SchemaVariable
+	  }[]
+
 export type StringSchema =
 	| GenericSchema & {
+			/**
+			 * Type of the target value
+			 */
 			type: "string"
+			/**
+			 * Name for a schema variable which uses this value
+			 */
 			$?: string
 	  } & (
 				| {
 						match?: RegExp | string | string[]
-						length?:
-							| number
-							| number[]
-							| {
-									min?: number
-									max?: number
-							  }
-							| {
-									min?: number
-									max?: number
-							  }[]
+
+						length?: NumberMatch
 						use$?: false
 				  }
 				| {
 						match?: RegExp | string | string[] | SchemaVariable
-						length?:
-							| number
-							| (number | SchemaVariable)[]
-							| SchemaVariable
-							| {
-									min?: number | SchemaVariable
-									max?: number | SchemaVariable
-							  }
-							| {
-									min?: number | SchemaVariable
-									max?: number | SchemaVariable
-							  }[]
+						length?: NumberMatchWithVariables
 						use$: true
 				  }
 			)
 
 export type NumberSchema =
 	| GenericSchema & {
+			/**
+			 * Type of the target value
+			 */
 			type: "number"
+			/**
+			 * Name for a schema variable which uses this value
+			 */
 			$?: string
 	  } & (
 				| {
-						match?:
-							| number
-							| number[]
-							| {
-									min?: number
-									max?: number
-							  }
-							| {
-									min?: number
-									max?: number
-							  }[]
+						match?: NumberMatch
 						use$?: false
 				  }
 				| {
-						match?:
-							| number
-							| (number | SchemaVariable)[]
-							| SchemaVariable
-							| {
-									min?: number | SchemaVariable
-									max?: number | SchemaVariable
-							  }
-							| {
-									min?: number | SchemaVariable
-									max?: number | SchemaVariable
-							  }[]
+						match?: NumberMatchWithVariables
 						use$: true
 				  }
 			)
 
 export type BooleanSchema =
 	| GenericSchema & {
+			/**
+			 * Type of the target value
+			 */
 			type: "boolean"
+			/**
+			 * Name for a schema variable which uses this value
+			 */
 			$?: string
 	  } & (
 				| {
@@ -120,139 +142,109 @@ export type BooleanSchema =
 			)
 
 export type NullSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "null"
 }
 
 export type UndefinedSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "undefined"
 }
 
 export type SymbolSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "symbol"
 }
 
 export type AnySchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "any"
 }
 
 export type InstanceSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "instance"
 	instanceOf: any
 }
 
 export type ArraySchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "array"
 	/**
-	 * Matches elements at exact indexes
+	 * Matches elements of an array at exact indexes
 	 */
 	match?: (TypeSchema | TypeSchema[])[]
 	/**
 	 * Matches one of arrays with elements at an exact indexes
 	 */
 	matchOneOf?: (TypeSchema | TypeSchema[])[][]
-
+	/**
+	 * Name for a schema variable which uses this value
+	 */
 	$?: string
 	/**
-	 * Determines if all of these are contained in the array
+	 * Determines if these are contained in the array
+	 *
+	 * When `strict` is `true` all elements of the target array must match `contains`
+	 *
+	 * When `strict` is `false` at least one schema in `contains` must match
 	 */
 	contains?:
 		| (TypeSchema & {
 				required: true
-				amount?:
-					| number
-					| number[]
-					| {
-							min?: number
-							max?: number
-					  }
-					| {
-							min?: number
-							max?: number
-					  }[]
+				amount?: NumberMatch
 				use$?: false
 		  })
 		| (TypeSchema & {
 				required: true
-				amount?:
-					| number
-					| (number | SchemaVariable)[]
-					| SchemaVariable
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }[]
+				amount?: NumberMatchWithVariables
 				use$: true
 		  })
 		| (TypeSchema & {
 				required: true
-				amount?:
-					| number
-					| number[]
-					| {
-							min?: number
-							max?: number
-					  }
-					| {
-							min?: number
-							max?: number
-					  }[]
+				amount?: NumberMatch
 				use$?: false
 		  })[]
 		| (TypeSchema & {
 				required: true
-				amount?:
-					| number
-					| (number | SchemaVariable)[]
-					| SchemaVariable
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }[]
+				amount?: NumberMatchWithVariables
 				use$: true
 		  })[]
 } & (
 		| {
+				/**
+				 * @default true
+				 */
 				strict?: boolean
-				length?:
-					| number
-					| number[]
-					| {
-							min?: number
-							max?: number
-					  }
-					| {
-							min?: number
-							max?: number
-					  }[]
+				length?: NumberMatch
 				use$?: false
 		  }
 		| {
+				/**
+				 * @default true
+				 */
 				strict?: boolean | SchemaVariable
-				length?:
-					| number
-					| (number | SchemaVariable)[]
-					| SchemaVariable
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }[]
+				length?: NumberMatchWithVariables
 				use$: true
 		  }
 	)
 
 export type ObjectSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "object"
 	matchProperties?: {
 		[key: string]: TypeSchema | TypeSchema[]
@@ -260,6 +252,9 @@ export type ObjectSchema = GenericSchema & {
 }
 
 export type BigintSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "bigint"
 	$?: string
 	use$?: boolean
@@ -296,78 +291,45 @@ export type BigintSchema = GenericSchema & {
 	)
 
 export type FunctionSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "function"
 }
 
 export type IntegerSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "integer"
 	$?: string
 	use$?: boolean
 } & (
 		| {
-				match?:
-					| number
-					| number[]
-					| {
-							min?: number
-							max?: number
-					  }
-					| {
-							min?: number
-							max?: number
-					  }[]
+				match?: NumberMatch
 				use$?: false
 		  }
 		| {
-				match?:
-					| number
-					| (number | SchemaVariable)[]
-					| SchemaVariable
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }[]
+				match?: NumberMatchWithVariables
 				use$: true
 		  }
 	)
 
 export type FloatSchema = GenericSchema & {
+	/**
+	 * Type of the target value
+	 */
 	type: "float"
 	fractionRequired?: boolean
 	$?: string
 	use$?: boolean
 } & (
 		| {
-				match?:
-					| number
-					| number[]
-					| {
-							min?: number
-							max?: number
-					  }
-					| {
-							min?: number
-							max?: number
-					  }[]
+				match?: NumberMatch
 				use$?: false
 		  }
 		| {
-				match?:
-					| number
-					| (number | SchemaVariable)[]
-					| SchemaVariable
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }
-					| {
-							min?: number | SchemaVariable
-							max?: number | SchemaVariable
-					  }[]
+				match?: NumberMatchWithVariables
 				use$: true
 		  }
 	)
@@ -387,3 +349,8 @@ export type TypeSchema =
 	| FunctionSchema
 	| IntegerSchema
 	| FloatSchema
+
+export type CustomValidator = (
+	target: any,
+	dynamicSchema: DynamicSchema
+) => void

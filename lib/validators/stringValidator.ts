@@ -1,12 +1,19 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
+	DynamicSchemaError,
 	MatchError,
 	RequiredError,
+	SchemaError,
 	TypeError,
 	TypeValidationError,
 } from "../Errors"
-import { StringSchema } from "../types/schemaTypes"
+import {
+	SchemaVariable,
+	StringSchema,
+	type TypeSchema,
+} from "../types/schemaTypes"
 import validate from "../validate"
 import validateType from "../validateType"
 
@@ -57,10 +64,11 @@ export default function stringValidator(
 	if (typeof schema.length !== "undefined") {
 		try {
 			validateType(
+				// @ts-ignore
 				{
 					type: "number",
 					match: schema.length,
-					use$: true,
+					use$: schema.use$,
 				},
 				target.length,
 				dynamicSchema,
@@ -92,6 +100,18 @@ export default function stringValidator(
 
 	// match
 	if (Array.isArray(schema.match)) {
+		if (schema.use$ && schema.match.some((v) => v.match(/\$.*/))) {
+			throw new SchemaError(
+				`variables can not be used in string array match`,
+				{
+					errorType: "wrongUsage",
+					type: "schema",
+					schema: schema,
+					schemaProperty: "match",
+					schemaType: "string",
+				}
+			)
+		}
 		if (!schema.match.some((v) => v === target)) {
 			throw new MatchError({
 				schema: schema,
@@ -173,6 +193,17 @@ export default function stringValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as StringSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	return true

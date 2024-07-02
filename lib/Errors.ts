@@ -18,6 +18,19 @@ type TypeValidationCause<T = SchemaTypes> = {
 	schema: TypeSchema
 }
 
+type CustomValidatorCause<T = SchemaTypes> = {
+	customValidatorName: string
+	type: "validation"
+	errorType: "notSatisfied" | string
+	schemaType: T
+	schemaProperty: "customValidation"
+	target: {
+		value: any
+		name?: string
+	}
+	schema: TypeSchema
+}
+
 type SchemaCause<T = SchemaTypes> = {
 	type: "schema"
 	errorType: string
@@ -36,7 +49,7 @@ type DynamicSchemaCause<T = SchemaTypes> = {
 		| string
 	schemaType?: T
 	schemaProperty?: string
-	schemaPropertyValue?: string
+	schemaPropertyValue?: any
 	target?: {
 		name?: string
 	}
@@ -47,7 +60,7 @@ class TVError<C extends unknown> extends Error {
 	#cause: any
 
 	constructor(message: string, cause: C) {
-		super(message + "; read cause for details")
+		super(message + "; read error cause for details")
 		this.name = this.constructor.name
 		this.cause = cause
 	}
@@ -61,8 +74,10 @@ class TVError<C extends unknown> extends Error {
 	}
 }
 
-export class TypeValidationError extends TVError<TypeValidationCause> {
-	constructor(message: string, cause: TypeValidationCause) {
+export class TypeValidationError<
+	T extends TypeValidationCause
+> extends TVError<T> {
+	constructor(message: string, cause: T) {
 		const parsedCause = {
 			...cause,
 			target: {
@@ -72,7 +87,7 @@ export class TypeValidationError extends TVError<TypeValidationCause> {
 						? JSON.stringify(cause.target.name)
 						: cause.target.name,
 			},
-		} as ParsedCause<TypeValidationCause>
+		} as ParsedCause<T>
 		super(message, parsedCause)
 	}
 }
@@ -89,7 +104,7 @@ export class DynamicSchemaError extends TVError<DynamicSchemaCause> {
 	}
 }
 
-export class RequiredError extends TypeValidationError {
+export class RequiredError extends TypeValidationError<TypeValidationCause> {
 	constructor(error: {
 		schemaType: SchemaTypes
 		target: {
@@ -112,7 +127,7 @@ export class RequiredError extends TypeValidationError {
 	}
 }
 
-export class TypeError extends TypeValidationError {
+export class TypeError extends TypeValidationError<TypeValidationCause> {
 	constructor(error: {
 		schemaType: SchemaTypes
 		target: {
@@ -122,7 +137,7 @@ export class TypeError extends TypeValidationError {
 		schema: TypeSchema
 	}) {
 		super(
-			`${error.target.name ?? "value"} must be of type ${
+			`${JSON.stringify(error.target.name) ?? "value"} must be of type ${
 				error.schemaType
 			}`,
 			{
@@ -140,7 +155,7 @@ export class TypeError extends TypeValidationError {
 	}
 }
 
-export class MatchError extends TypeValidationError {
+export class MatchError extends TypeValidationError<TypeValidationCause> {
 	constructor(error: {
 		schemaType: SchemaTypes
 		target: {
@@ -181,31 +196,28 @@ export class MatchError extends TypeValidationError {
 	}
 }
 
-export class DynamicSchemaDisabledError extends DynamicSchemaError {
+export class DynamicSchemaDisabledError extends SchemaError {
 	constructor(error: {
 		schemaType: SchemaTypes
 		schemaProperty: string
-		schemaPropertyValue: string
+		schemaPropertyValue: any
 		schema: TypeSchema
-		target: {
-			name?: string
-		}
 	}) {
 		super(
-			`Can't use dynamic schema${
-				error.target.name ? ` on ${error.target.name}` : ""
-			} without enabling it with use$ schema property`,
+			`Can't use dynamic schema without enabling it with use$ schema property`,
 			{
-				type: "dynamicSchema",
-				errorType: "notSatisfied",
+				type: "schema",
+				errorType: "dynamicSchemaDisabled",
 				schemaType: error.schemaType,
-				schemaProperty: "required",
-				schemaPropertyValue: error.schemaPropertyValue,
-				target: {
-					name: error.target.name,
-				},
+				schemaProperty: error.schemaProperty,
 				schema: error.schema,
 			}
 		)
+	}
+}
+
+export class CustomValidatorError extends Error {
+	constructor(message: string) {
+		super(message)
 	}
 }

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import anyValidator from "../lib/validators/anyValidator"
+import DynamicSchema from "../lib/dynamicSchema/dynamicSchema"
 
 describe("required", () => {
 	test("undefined is accepted when value is not required", () => {
@@ -10,7 +11,7 @@ describe("required", () => {
 					required: false,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -24,7 +25,7 @@ describe("type", () => {
 					type: "any",
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -36,7 +37,7 @@ describe("type", () => {
 					type: "any",
 				},
 				"",
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -48,7 +49,7 @@ describe("type", () => {
 					type: "any",
 				},
 				1,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})

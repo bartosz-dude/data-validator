@@ -1,4 +1,5 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { IntegerSchema, SchemaVariable } from "../types/schemaTypes"
@@ -224,6 +225,17 @@ export default function integerValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as IntegerSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	if (typeof schema.$ === "string") {

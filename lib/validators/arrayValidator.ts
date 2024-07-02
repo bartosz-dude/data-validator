@@ -1,4 +1,5 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
 	MatchError,
@@ -20,6 +21,7 @@ export default function arrayValidator(
 	dynamicSchema: DynamicSchema,
 	options: Options = {}
 ) {
+	schema.strict ??= true
 	options.targetName ??= target
 	const targetName = options.targetName as string
 
@@ -220,6 +222,8 @@ export default function arrayValidator(
 		}
 	}
 
+	// contains
+	const matchContainedAt: number[] = []
 	function matchContain(contain: Exclude<typeof schema.contains, undefined>) {
 		if (Array.isArray(contain)) {
 			return 0
@@ -235,15 +239,23 @@ export default function arrayValidator(
 					return false
 				}
 
-				return validateType(contain, v, dynamicSchema, {
+				const valid = validateType(contain, v, dynamicSchema, {
 					targetName: `${options.targetName}[${vI}]`,
 				})
+
+				matchContainedAt[vI]++
+
+				return valid
 			} catch (error) {
-				if (!contain) {
+				if (error instanceof TypeValidationError) {
+					if (!contain) {
+						return false
+					}
+
 					return false
 				}
 
-				return false
+				throw error
 			}
 		})
 
@@ -276,15 +288,34 @@ export default function arrayValidator(
 					continue
 				}
 
-				foundCount += matchContain(contains[i])
+				const found = matchContain(contains[i])
+				foundCount += found > 0 ? 1 : 0
 			}
 		} else {
-			foundCount += matchContain(contains)
+			const found = matchContain(contains)
+			foundCount += found > 0 ? 1 : 0
 		}
 
-		if (schema.strict && foundCount < target.length) {
+		if (foundCount < (Array.isArray(contains) ? contains.length : 1)) {
 			throw new TypeValidationError(
-				`Not all array entries match contain schema`,
+				`Not all contain schema matched in the array`,
+				{
+					type: "validation",
+					schemaType: "array",
+					errorType: "notSatisfied",
+					schemaProperty: "contain",
+					schema: schema,
+					target: {
+						value: target,
+						name: targetName,
+					},
+				}
+			)
+		}
+
+		if (schema.contains && matchContainedAt.some((v) => v <= 0)) {
+			throw new TypeValidationError(
+				`Not all elements of the target array matched contain schema`,
 				{
 					type: "validation",
 					schemaType: "array",
@@ -298,6 +329,17 @@ export default function arrayValidator(
 				}
 			)
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as ArraySchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	if (typeof schema.$ === "string") {

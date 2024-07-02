@@ -1,5 +1,7 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
+import useVar from "../dynamicSchema/useVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { NumberSchema, SchemaVariable } from "../types/schemaTypes"
 import validate from "../validate"
@@ -75,11 +77,12 @@ export default function numberValidator(
 	if (Array.isArray(schema.match)) {
 		const match = schema.match.map((v) => {
 			if (typeof v === "number" || typeof v === "string") {
-				const matchValue = resolveVar<NumberSchema>(
+				const matchValue = useVar<number, NumberSchema>(
+					v,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
+				)
 				validate(matchValue, {
 					type: "number",
 				})
@@ -88,24 +91,18 @@ export default function numberValidator(
 			}
 
 			if (typeof v === "object") {
-				const min = resolveVar<NumberSchema>(
+				const min = useVar<number, NumberSchema>(
+					v.min,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(min, {
-					type: "number",
-				})
-
-				const max = resolveVar<NumberSchema>(
+				)
+				const max = useVar<number, NumberSchema>(
+					v.max,
 					"match",
 					schema,
 					dynamicSchema
-				) as number
-				validate(max, {
-					type: "number",
-				})
-
+				)
 				return {
 					min: min,
 					max: max,
@@ -150,8 +147,11 @@ export default function numberValidator(
 		let failedMatches = 0
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
+				console.log("matchEntry", matchEntry, match)
 				if (
+					// @ts-ignore
 					typeof matchEntry.min !== "undefined" &&
+					// @ts-ignore
 					target < matchEntry.min
 				) {
 					failedMatches++
@@ -159,7 +159,9 @@ export default function numberValidator(
 				}
 
 				if (
+					// @ts-ignore
 					typeof matchEntry.max !== "undefined" &&
+					// @ts-ignore
 					target > matchEntry.max
 				) {
 					failedMatches++
@@ -183,15 +185,15 @@ export default function numberValidator(
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		const min = resolveVar<NumberSchema>(
+		const match = resolveVar<NumberSchema>(
 			"match",
 			schema,
 			dynamicSchema
-		) as number
-		validate(min, {
-			type: "number",
-		})
-		if (typeof schema.match.min !== "undefined" && target < min) {
+		) as { min?: number; max?: number }
+		if (
+			typeof schema.match.min !== "undefined" &&
+			target < (match.min ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's NumberSchema so why the complaining
 				// @ts-ignore
@@ -204,15 +206,10 @@ export default function numberValidator(
 			})
 		}
 
-		const max = resolveVar<NumberSchema>(
-			"match",
-			schema,
-			dynamicSchema
-		) as number
-		validate(max, {
-			type: "number",
-		})
-		if (typeof schema.match.max !== "undefined" && target > max) {
+		if (
+			typeof schema.match.max !== "undefined" &&
+			target > (match.max ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's NumberSchema so why the complaining
 				// @ts-ignore
@@ -224,6 +221,17 @@ export default function numberValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as NumberSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	if (typeof schema.$ === "string") {

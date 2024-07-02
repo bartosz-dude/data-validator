@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import anyValidator from "../lib/validators/anyValidator"
 import objectValidator from "../lib/validators/objectValidator"
 import { RequiredError, TypeValidationError } from "../lib/Errors"
+import DynamicSchema from "../lib/dynamicSchema/dynamicSchema"
 
 describe("required", () => {
 	test("undefined is accepted when value is not required", () => {
@@ -12,7 +13,7 @@ describe("required", () => {
 					required: false,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -25,7 +26,7 @@ describe("required", () => {
 					required: true,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -39,7 +40,7 @@ describe("type", () => {
 					type: "object",
 				},
 				{},
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -51,7 +52,7 @@ describe("type", () => {
 					type: "object",
 				},
 				"a",
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -79,7 +80,7 @@ describe("matchProperties", () => {
 					test: "test",
 					abc: "test",
 				},
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 
@@ -98,7 +99,7 @@ describe("matchProperties", () => {
 				{
 					test2: "test2",
 				},
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})

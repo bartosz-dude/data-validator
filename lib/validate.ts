@@ -1,6 +1,10 @@
 import DynamicSchema from "./dynamicSchema/dynamicSchema"
 import { TypeValidationError } from "./Errors"
-import { SchemaVariable, TypeSchema } from "./types/schemaTypes"
+import {
+	CustomValidator,
+	SchemaVariable,
+	TypeSchema,
+} from "./types/schemaTypes"
 import validateType from "./validateType"
 
 export type SchemaVariables = Map<SchemaVariable, any>
@@ -8,14 +12,26 @@ export type SchemaVariables = Map<SchemaVariable, any>
 export default function validate(
 	target: any,
 	schema: TypeSchema | TypeSchema[],
-	options: { throwErrors?: boolean } = { throwErrors: true }
+	options: {
+		throwErrors?: boolean
+		customVariables?: {
+			[key: string]: CustomValidator
+		}
+	} = { throwErrors: true }
 ): boolean {
 	const dynamicSchema = new DynamicSchema()
+
+	if (options.customVariables) {
+		const customFunctions = Object.entries(options.customVariables)
+		customFunctions.forEach((v) => {
+			dynamicSchema.set(`$${v[0]}`, v[1])
+		})
+	}
 
 	try {
 		if (Array.isArray(schema)) {
 			let invalidCount = 0
-			// idk why it throws an error for schema type, when I check that's an array
+			// idk why it throws an error for schema type, when I check that it's an array
 			// @ts-ignore
 			for (const schemaEntry of schema) {
 				try {
@@ -25,7 +41,6 @@ export default function validate(
 						invalidCount++
 						continue
 					}
-
 					throw error
 				}
 			}

@@ -1,7 +1,8 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { RequiredError, TypeError, TypeValidationError } from "../Errors"
-import { InstanceSchema } from "../types/schemaTypes"
+import { InstanceSchema, SchemaVariable } from "../types/schemaTypes"
 import validate from "../validate"
 
 interface Options {
@@ -62,6 +63,17 @@ export default function instanceValidator(
 				},
 				type: "validation",
 			}
+		)
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as InstanceSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
 		)
 	}
 

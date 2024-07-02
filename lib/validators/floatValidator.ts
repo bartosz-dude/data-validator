@@ -1,4 +1,5 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import {
 	MatchError,
@@ -7,7 +8,7 @@ import {
 	TypeError,
 	TypeValidationError,
 } from "../Errors"
-import { FloatSchema } from "../types/schemaTypes"
+import { FloatSchema, SchemaVariable } from "../types/schemaTypes"
 import validate from "../validate"
 
 interface Options {
@@ -250,6 +251,22 @@ export default function floatValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as FloatSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
+	}
+
+	// $
+	if (typeof schema.$ === "string") {
+		dynamicSchema.set(("$" + schema.$) as SchemaVariable, target)
 	}
 
 	return true

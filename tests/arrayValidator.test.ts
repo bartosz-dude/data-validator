@@ -1,12 +1,8 @@
 import { describe, test, expect } from "vitest"
-import {
-	AmountError,
-	LengthError,
-	RequiredError,
-	TypeValidationError,
-} from "../lib/Errors"
+import { MatchError, RequiredError, TypeValidationError } from "../lib/Errors"
 import arrayValidator from "../lib/validators/arrayValidator"
 import stringValidator from "../lib/validators/stringValidator"
+import DynamicSchema from "../lib/dynamicSchema/dynamicSchema"
 
 describe("required", () => {
 	test("undefined is accepted when value is not required", () => {
@@ -17,7 +13,7 @@ describe("required", () => {
 					required: false,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -30,7 +26,7 @@ describe("required", () => {
 					required: true,
 				},
 				undefined,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -44,7 +40,7 @@ describe("type", () => {
 					type: "array",
 				},
 				[],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -56,7 +52,7 @@ describe("type", () => {
 					type: "array",
 				},
 				0,
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(TypeValidationError)
 	})
@@ -71,7 +67,7 @@ describe("length", () => {
 					length: 4,
 				},
 				[1, 2, 3, 4],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -84,9 +80,9 @@ describe("length", () => {
 					length: 4,
 				},
 				[1, 2, 3, 4, 5],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("array with length higher than min is accepted", () => {
@@ -99,7 +95,7 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3, 4, 5],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -114,7 +110,7 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -130,7 +126,7 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -145,9 +141,9 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3, 4, 5],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("array with length lower than min is not accepted", () => {
@@ -160,9 +156,9 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 
 	test("array with length outside of min and max is not accepted", () => {
@@ -176,9 +172,9 @@ describe("length", () => {
 					},
 				},
 				[1, 2, 3, 4, 5],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(LengthError)
+		).toThrowError(TypeValidationError)
 	})
 })
 
@@ -198,7 +194,7 @@ describe("match", () => {
 					],
 				},
 				["a", 1],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -220,7 +216,7 @@ describe("match", () => {
 					],
 				},
 				["a"],
-				new Map()
+				new DynamicSchema()
 			)
 		).toThrowError(RequiredError)
 	})
@@ -247,7 +243,7 @@ describe("match", () => {
 					],
 				},
 				["a", 1],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 
@@ -272,7 +268,7 @@ describe("match", () => {
 					],
 				},
 				["b", 1],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -292,7 +288,7 @@ describe("contains", () => {
 					],
 				},
 				["a"],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -310,9 +306,9 @@ describe("contains", () => {
 					],
 				},
 				["a"],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(RequiredError)
+		).toThrowError(TypeValidationError)
 	})
 
 	describe("amount", () => {
@@ -330,7 +326,7 @@ describe("contains", () => {
 						],
 					},
 					["a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
 			).toBe(true)
 		})
@@ -349,9 +345,9 @@ describe("contains", () => {
 						],
 					},
 					["a"],
-					new Map()
+					new DynamicSchema()
 				)
-			).toThrowError(AmountError)
+			).toThrowError(MatchError)
 		})
 
 		test("array contains required value with min amount", () => {
@@ -370,7 +366,7 @@ describe("contains", () => {
 						],
 					},
 					["a", "a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
 			).toBe(true)
 		})
@@ -391,7 +387,7 @@ describe("contains", () => {
 						],
 					},
 					["a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
 			).toBe(true)
 		})
@@ -413,7 +409,7 @@ describe("contains", () => {
 						],
 					},
 					["a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
 			).toBe(true)
 		})
@@ -434,9 +430,9 @@ describe("contains", () => {
 						],
 					},
 					["a"],
-					new Map()
+					new DynamicSchema()
 				)
-			).toThrowError(AmountError)
+			).toThrowError(MatchError)
 		})
 
 		test("array contains required value with more than max amount", () => {
@@ -455,9 +451,9 @@ describe("contains", () => {
 						],
 					},
 					["a", "a", "a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
-			).toThrowError(AmountError)
+			).toThrowError(MatchError)
 		})
 
 		test("array contains required value with beyond min and max amount", () => {
@@ -477,9 +473,9 @@ describe("contains", () => {
 						],
 					},
 					["a", "a", "a", "a"],
-					new Map()
+					new DynamicSchema()
 				)
-			).toThrowError(AmountError)
+			).toThrowError(MatchError)
 		})
 	})
 })
@@ -510,7 +506,7 @@ describe("match with contains", () => {
 					],
 				},
 				[1, "abc", 2],
-				new Map()
+				new DynamicSchema()
 			)
 		).toBe(true)
 	})
@@ -540,8 +536,27 @@ describe("match with contains", () => {
 					],
 				},
 				[3, "abc", 2],
-				new Map()
+				new DynamicSchema()
 			)
-		).toThrowError(RequiredError)
+		).toThrowError(TypeValidationError)
+	})
+
+	test("array with contains is valid", () => {
+		expect(
+			arrayValidator(
+				{
+					type: "array",
+					contains: [
+						{
+							type: "number",
+							match: 1,
+							required: true,
+						},
+					],
+				},
+				[1, "abc", 2],
+				new DynamicSchema()
+			)
+		).toBe(true)
 	})
 })

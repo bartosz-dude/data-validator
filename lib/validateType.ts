@@ -34,7 +34,7 @@ export default function validateType(
 		case "boolean":
 			return booleanValidator(schema, target, dynamicSchema, options)
 		case "undefined":
-			return undefinedValidator(schema, target, options)
+			return undefinedValidator(schema, target, dynamicSchema, options)
 		case "null":
 			return nullValidator(schema, target, dynamicSchema, options)
 		case "instance":

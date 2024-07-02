@@ -1,4 +1,5 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, TypeError } from "../Errors"
 import { BooleanSchema, SchemaVariable } from "../types/schemaTypes"
@@ -68,6 +69,17 @@ export default function booleanValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as BooleanSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	if (typeof schema.$ === "string") {

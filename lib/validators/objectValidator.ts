@@ -1,7 +1,8 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { RequiredError, TypeError, TypeValidationError } from "../Errors"
-import { ObjectSchema } from "../types/schemaTypes"
+import { ObjectSchema, SchemaVariable } from "../types/schemaTypes"
 import validate from "../validate"
 import validateType from "../validateType"
 
@@ -139,6 +140,17 @@ export default function objectValidator(
 				})
 			}
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as ObjectSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	return true

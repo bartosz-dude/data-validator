@@ -1,4 +1,5 @@
 import DynamicSchema from "../dynamicSchema/dynamicSchema"
+import handleCustomValidators from "../dynamicSchema/handleCustomValidators"
 import resolveVar from "../dynamicSchema/resolveVar"
 import { MatchError, RequiredError, SchemaError, TypeError } from "../Errors"
 import { BigintSchema, SchemaVariable } from "../types/schemaTypes"
@@ -151,7 +152,9 @@ export default function bigintValidator(
 		if (match.every((v) => typeof v === "object")) {
 			for (const matchEntry of match) {
 				if (
+					// @ts-ignore
 					typeof matchEntry.min !== "undefined" &&
+					// @ts-ignore
 					target < matchEntry.min
 				) {
 					failedMatches++
@@ -159,7 +162,9 @@ export default function bigintValidator(
 				}
 
 				if (
+					// @ts-ignore
 					typeof matchEntry.max !== "undefined" &&
+					// @ts-ignore
 					target > matchEntry.max
 				) {
 					failedMatches++
@@ -183,15 +188,15 @@ export default function bigintValidator(
 	}
 
 	if (typeof schema.match === "object" && !Array.isArray(schema.match)) {
-		const min = resolveVar<BigintSchema>(
+		const match = resolveVar<BigintSchema>(
 			"match",
 			schema,
 			dynamicSchema
-		) as bigint
-		validate(min, {
-			type: "bigint",
-		})
-		if (typeof schema.match.min !== "undefined" && target < min) {
+		) as { min?: bigint; max?: bigint }
+		if (
+			typeof schema.match.min !== "undefined" &&
+			target < (match.min ?? NaN)
+		) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's BigintSchema so why the complaining
 				// @ts-ignore
@@ -212,7 +217,7 @@ export default function bigintValidator(
 		validate(max, {
 			type: "bigint",
 		})
-		if (typeof schema.match.max !== "undefined" && target > max) {
+		if (typeof schema.match.max !== "undefined" && (match.max ?? NaN)) {
 			throw new MatchError({
 				// what is wrong with schema here ? it's BigintSchema so why the complaining
 				// @ts-ignore
@@ -224,6 +229,17 @@ export default function bigintValidator(
 				},
 			})
 		}
+	}
+
+	// customValidator
+	if (schema.use$ && typeof schema.customValidator !== "undefined") {
+		handleCustomValidators(
+			target,
+			schema as BigintSchema & {
+				customValidator: SchemaVariable | SchemaVariable[]
+			},
+			dynamicSchema
+		)
 	}
 
 	if (typeof schema.$ === "string") {
