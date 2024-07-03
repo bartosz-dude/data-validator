@@ -17,7 +17,7 @@ export default function undefinedValidator(
 	const targetName = options.targetName as string
 
 	// type
-	if (target !== undefined) {
+	if (schema.required && target !== undefined) {
 		throw new TypeError({
 			schema: schema,
 			schemaType: "undefined",
