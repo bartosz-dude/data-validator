@@ -17,8 +17,10 @@ export default function validate(
 		customVariables?: {
 			[key: string]: CustomValidator
 		}
-	} = { throwErrors: true }
+	} = {}
 ): boolean {
+	options.throwErrors ??= true
+
 	const dynamicSchema = new DynamicSchema()
 
 	if (options.customVariables) {
