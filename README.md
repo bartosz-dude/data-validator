@@ -1,4 +1,4 @@
-# Type validator
+# Data validator
 
 Validate any javascript data type and a few more
 
