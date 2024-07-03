@@ -365,7 +365,7 @@ export type TypeSchema =
 	| IntegerSchema
 	| FloatSchema
 
-export type CustomValidator = (
-	target: any,
+export type CustomValidator<T extends any = any> = (
+	target: T,
 	dynamicSchema: DynamicSchema
 ) => void
