@@ -1,5 +1,5 @@
 {
-	"name": "type-validator",
+	"name": "data-validator",
 	"version": "1.0.0",
 	"description": "validate any js data type",
 	"files": [
